@@ -8,7 +8,6 @@ import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
 
 import ac.adproj.mchat.model.Protocol;
-import ac.adproj.mchat.protocol.UserManager;
 
 /**
  * 用户名检查服务的线程执行体。

@@ -43,6 +43,7 @@ import ac.adproj.mchat.model.Handler;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.Protocol;
 import ac.adproj.mchat.model.User;
+import ac.adproj.mchat.service.UserManager;
 import ac.adproj.mchat.service.UserNameQueryService;
 import ac.adproj.mchat.ui.CommonDialogs;
 

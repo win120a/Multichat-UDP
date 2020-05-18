@@ -15,7 +15,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package ac.adproj.mchat.protocol;
+package ac.adproj.mchat.service;
 
 import java.net.SocketAddress;
 import java.util.Collection;
