@@ -21,8 +21,8 @@ import java.io.IOException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 
+import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.model.Protocol;
-import ac.adproj.mchat.protocol.ServerListener;
 import ac.adproj.mchat.web.WebStarter;
 
 /**

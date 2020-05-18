@@ -15,7 +15,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package ac.adproj.mchat.protocol;
+package ac.adproj.mchat.listener;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -31,7 +31,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import ac.adproj.mchat.model.Handler;
+import ac.adproj.mchat.handler.Handler;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.Protocol;
 

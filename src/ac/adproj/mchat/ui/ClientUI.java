@@ -23,8 +23,8 @@ import java.io.IOException;
 
 import org.eclipse.swt.widgets.Display;
 
+import ac.adproj.mchat.listener.ClientListener;
 import ac.adproj.mchat.model.Protocol;
-import ac.adproj.mchat.protocol.ClientListener;
 
 /**
  * 客户端界面。

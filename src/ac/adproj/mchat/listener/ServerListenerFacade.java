@@ -1,4 +1,4 @@
-package ac.adproj.mchat.protocol;
+package ac.adproj.mchat.listener;
 
 import javax.websocket.Session;
 
