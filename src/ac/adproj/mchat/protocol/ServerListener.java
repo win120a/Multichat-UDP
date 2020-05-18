@@ -26,13 +26,9 @@ import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -47,6 +43,7 @@ import ac.adproj.mchat.model.Handler;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.Protocol;
 import ac.adproj.mchat.model.User;
+import ac.adproj.mchat.service.UserNameQueryService;
 import ac.adproj.mchat.ui.CommonDialogs;
 
 /**
@@ -54,28 +51,28 @@ import ac.adproj.mchat.ui.CommonDialogs;
  * 
  * @author Andy Cheung
  * @implNote 本服务器主要使用 DatagramChannel 来接受用户的 UDP 连接。其使用 ServerMessageHandler
- *           来进行信息处理， DuplicateCheckerService 来接受客户端对用户名是否使用的询问（用户名查询服务）。其使用
+ *           来进行信息处理， UserNameQueryService 来接受客户端对用户名是否使用的询问（用户名查询服务）。其使用
  *           ThreadPoolExecutor 作为线程池实现，以管理线程。
  * 
  * @see java.nio.channels.DatagramChannel
  * @see java.util.concurrent.ThreadPoolExecutor
  * @see ServerMessageHandler
- * @see DuplicateCheckerService
+ * @see UserNameQueryService
  */
 public class ServerListener implements Listener {
 
     private DatagramChannel serverDatagramChannel;
 
     private ExecutorService threadPool;
-    private Map<String, User> userProfile = new ConcurrentHashMap<>(16);
-    private Set<String> names = Collections.synchronizedSet(new HashSet<>());
+
+    private UserManager userManager = UserManager.getInstance();
 
     private Shell shell;
     private Consumer<String> uiAction;
-    private DuplicateCheckerService duplicateCheckerService;
+    private UserNameQueryService userNameQueryService;
 
     private int threadNumber = 0;
-    
+
     /**
      * 构造服务端监听器类。
      * 
@@ -139,8 +136,8 @@ public class ServerListener implements Listener {
 
         threadPool = new ThreadPoolExecutor(4, 16, 3000, TimeUnit.MILLISECONDS, bq, threadFactory);
 
-        duplicateCheckerService = new DuplicateCheckerService();
-        threadPool.submit(duplicateCheckerService);
+        userNameQueryService = new UserNameQueryService();
+        threadPool.submit(userNameQueryService);
 
         serverDatagramChannel = DatagramChannel.open();
         serverDatagramChannel.bind(new InetSocketAddress(Protocol.SERVER_PORT));
@@ -159,7 +156,7 @@ public class ServerListener implements Listener {
                         ll.add(address);
 
                         readMessage(bb, handler, 0, ll.get(0));
-                        
+
                         ll.clear();
                     });
 
@@ -168,23 +165,22 @@ public class ServerListener implements Listener {
                         // 程序退出了会发生这个异常，忽略。
                         return;
                     }
-                    
+
                     exc.printStackTrace();
 
                     SoftReference<User> sr = null;
 
-                    for (User user : userProfile.values()) {
+                    for (User user : userManager.userProfileValueSet()) {
                         if (user.getAddress().equals(ll.get(0))) {
                             sr = new SoftReference<>(user);
                         }
                     }
 
-                    userProfile.remove(sr.get().getUuid());
-                    names.remove(sr.get().getName());
+                    userManager.deleteUserProfile(sr.get().getUuid());
 
                     sr.clear();
                     sr = null;
-                    
+
                     ll.clear();
                 }
             }
@@ -212,18 +208,18 @@ public class ServerListener implements Listener {
 
                 User userObject = new User(uuid, address, name);
 
-                userProfile.put(uuid, userObject);
-                names.add(name);
+                userManager.register(userObject);
 
                 return "Client: " + uuid + " (" + name + ") Connected.";
             } else if (message.startsWith(Protocol.DEBUG_MODE_STRING)) {
                 // 调试模式
-                System.out.println(userProfile);
+                System.out.println(userManager.toString());
                 return "";
 
             } else if (message.startsWith(Protocol.NOTIFY_LOGOFF_HEADER)) {
                 // 客户端请求注销
-                SoftReference<String> uuid = new SoftReference<String>(message.replace(Protocol.NOTIFY_LOGOFF_HEADER, ""));
+                SoftReference<String> uuid = new SoftReference<String>(
+                        message.replace(Protocol.NOTIFY_LOGOFF_HEADER, ""));
 
                 try {
                     System.out.println("Disconnecting: " + uuid.get());
@@ -246,17 +242,17 @@ public class ServerListener implements Listener {
 
                 String uuid = data[0];
                 String messageText = data[1];
-                
-                if (!userProfile.containsKey(uuid)) {
+
+                if (!userManager.containsUuid(uuid)) {
                     // 不接收没有注册机器的任何信息
                     return "";
                 }
 
-                String nameOnlyProtocolMessage = message.replace(uuid, userProfile.get(uuid).getName());
+                String nameOnlyProtocolMessage = message.replace(uuid, userManager.getName(uuid));
 
                 ByteBuffer bb = ByteBuffer.wrap(nameOnlyProtocolMessage.getBytes(StandardCharsets.UTF_8));
 
-                for (User u : userProfile.values()) {
+                for (User u : userManager.userProfileValueSet()) {
                     try {
                         if (!uuid.equals(u.getUuid())) {
                             bb.rewind();
@@ -278,101 +274,16 @@ public class ServerListener implements Listener {
                     }
                 }
 
-                message = userProfile.get(uuid).getName() + ": " + messageText;
+                message = userManager.getName(uuid) + ": " + messageText;
             }
 
             return message;
         }
     }
 
-    /**
-     * 用户名检查服务的线程执行体。
-     * 
-     * @author Andy Cheung
-     */
-    private class DuplicateCheckerService implements Runnable {
-        private DatagramChannel dc;
-        private boolean stopSelf;
-
-        public DuplicateCheckerService() throws IOException {
-            dc = DatagramChannel.open();
-            dc.configureBlocking(true);
-            dc.bind(new InetSocketAddress(Protocol.SERVER_CHECK_DUPLICATE_PORT));
-        }
-
-        private void reInit() throws IOException {
-            dc = DatagramChannel.open();
-            dc.configureBlocking(true);
-            dc.bind(new InetSocketAddress(Protocol.SERVER_CHECK_DUPLICATE_PORT));
-        }
-
-        @Override
-        public void run() {
-            ByteBuffer bb = ByteBuffer.allocate(BUFFER_SIZE);
-            StringBuffer buffer = new StringBuffer();
-
-            while (!stopSelf) {
-
-                try {
-
-                    if (!dc.isOpen()) {
-                        reInit();
-                    }
-
-                    SocketAddress address = dc.receive(bb);
-
-                    bb.flip();
-
-                    while (bb.hasRemaining()) {
-                        buffer.append(StandardCharsets.UTF_8.decode(bb));
-                    }
-
-                    String message = buffer.toString();
-
-                    buffer.delete(0, buffer.length());
-                    bb.clear();
-
-                    if (message.startsWith(Protocol.CHECK_DUPLICATE_REQUEST_HEADER)) {
-                        String name = message.replace(Protocol.CHECK_DUPLICATE_REQUEST_HEADER, "");
-                        String result = names.contains(name) ? Protocol.USER_NAME_DUPLICATED
-                                : Protocol.USER_NAME_NOT_EXIST;
-
-                        bb.put(result.getBytes(StandardCharsets.UTF_8));
-
-                        bb.flip();
-
-                        dc.send(bb, address);
-
-                        bb.clear();
-                    }
-                } catch (IOException e) {
-                    String name = e.getClass().getName();
-                    if (name.contains("ClosedByInterruptException") || name.contains("AsynchronousCloseException")) {
-                        // ignore
-                        return;
-                    }
-
-                    e.printStackTrace();
-                }
-            }
-
-            if (stopSelf) {
-                try {
-                    dc.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-        }
-
-        public void stopSelf() {
-            this.stopSelf = true;
-        }
-    }
-
     @Override
     public boolean isConnected() {
-        if (userProfile.isEmpty()) {
+        if (userManager.isEmptyUserProfile()) {
             return false;
         } else {
             return true;
@@ -384,7 +295,7 @@ public class ServerListener implements Listener {
         final ByteBuffer bb = ByteBuffer.wrap(text.getBytes(StandardCharsets.UTF_8));
 
         if (uuid.equals(Protocol.BROADCAST_MESSAGE_UUID)) {
-            for (User u : userProfile.values()) {
+            for (User u : userManager.userProfileValueSet()) {
                 try {
                     bb.rewind();
 
@@ -398,7 +309,7 @@ public class ServerListener implements Listener {
             }
         } else {
             try {
-                serverDatagramChannel.send(bb, userProfile.get(uuid).getAddress());
+                serverDatagramChannel.send(bb, userManager.lookup(uuid).getAddress());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -418,8 +329,7 @@ public class ServerListener implements Listener {
      * @throws IOException 如果IO出错
      */
     private void logoff(String uuid) throws IOException {
-        User u = userProfile.remove(uuid);
-        names.remove(u.getName());
+        userManager.deleteUserProfile(uuid);
     }
 
     /**
@@ -428,7 +338,7 @@ public class ServerListener implements Listener {
      * @throws IOException 如果IO出错
      */
     public void logoffAll() throws IOException {
-        userProfile.forEach((k, v) -> {
+        userManager.userProfileValueSet().forEach((v) -> {
             try {
                 final ByteBuffer bb = ByteBuffer
                         .wrap((Protocol.NOTIFY_LOGOFF_HEADER + "SERVER").getBytes(StandardCharsets.UTF_8));
@@ -438,9 +348,8 @@ public class ServerListener implements Listener {
                 // Ignore
             }
         });
-
-        userProfile.clear();
-        names.clear();
+        
+        userManager.clearAllProfiles();
     }
 
     /**
@@ -448,9 +357,9 @@ public class ServerListener implements Listener {
      */
     @Override
     public void close() throws Exception {
-        duplicateCheckerService.stopSelf();
+        userNameQueryService.stopSelf();
         threadPool.shutdownNow();
-        userProfile.clear();
+        userManager.clearAllProfiles();
         serverDatagramChannel.close();
     }
 }

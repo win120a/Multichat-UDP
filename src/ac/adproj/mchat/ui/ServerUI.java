@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Display;
 
 import ac.adproj.mchat.model.Protocol;
 import ac.adproj.mchat.protocol.ServerListener;
+import ac.adproj.mchat.web.WebStarter;
 
 /**
  * 服务器端界面。
@@ -74,6 +75,9 @@ public class ServerUI extends BaseChattingUI {
         ui.initListener();
         
         Display d = ui.getDisplay();
+        
+        WebStarter s = new WebStarter();
+        s.start(8090);
 
         ui.open();
         ui.layout();
@@ -85,6 +89,7 @@ public class ServerUI extends BaseChattingUI {
         }
         
         ui.listener.close();
+        s.close();
     }
 
 }
