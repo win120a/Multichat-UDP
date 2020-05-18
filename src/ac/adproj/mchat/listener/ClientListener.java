@@ -20,7 +20,6 @@ package ac.adproj.mchat.listener;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
@@ -31,7 +30,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import ac.adproj.mchat.handler.Handler;
+import ac.adproj.mchat.handler.ClientMessageHandler;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.Protocol;
 
@@ -48,11 +47,11 @@ public class ClientListener implements Listener {
     /**
      * 构造客户端监听器类。
      * 
-     * @param shell    服务器 UI 窗口
+     * @param shell     服务器 UI 窗口
      * @param uiActions 包装由服务器 UI 指定的行为，其在接受、处理完消息后执行。
-     * @param address 服务器地址
-     * @param port 客户端端口
-     * @param username 用户名
+     * @param address   服务器地址
+     * @param port      客户端端口
+     * @param username  用户名
      */
     public ClientListener(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username)
             throws IOException {
@@ -63,11 +62,11 @@ public class ClientListener implements Listener {
     /**
      * 业务逻辑初始化方法。
      * 
-     * @param shell    服务器 UI 窗口
+     * @param shell     服务器 UI 窗口
      * @param uiActions 包装由服务器 UI 指定的行为，其在接受、处理完消息后执行。
-     * @param address 服务器地址
-     * @param port 客户端端口
-     * @param username 用户名
+     * @param address   服务器地址
+     * @param port      客户端端口
+     * @param username  用户名
      * @throws IOException 如果读写出错
      */
     private void init(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username)
@@ -139,7 +138,14 @@ public class ClientListener implements Listener {
      * @param username  用户名
      */
     private void initNioSocketConnection(Shell shell, Consumer<String> uiActions, InetAddress ia, String username) {
-        ClientMessageHandler handler = new ClientMessageHandler();
+        ClientMessageHandler handler = new ClientMessageHandler((v) -> {
+            try {
+                onForceLogoff();
+            } catch (IOException e) {
+                e.printStackTrace();
+                shell.getDisplay().syncExec(() -> MessageDialog.openError(shell, "出错", "下线出错：" + e.getMessage()));
+            }
+        });
 
         try {
             socketChannel.connect(new InetSocketAddress(ia, SERVER_PORT));
@@ -204,35 +210,6 @@ public class ClientListener implements Listener {
         }).start();
     }
 
-    /**
-     * 客户端消息处理类。
-     * 
-     * @author Andy Cheung
-     */
-    private class ClientMessageHandler implements Handler {
-        @Override
-        public String handleMessage(String message, SocketAddress address) {
-            if (message.startsWith(Protocol.MESSAGE_HEADER_LEFT_HALF)) {
-                message = message.replace(Protocol.MESSAGE_HEADER_LEFT_HALF, "")
-                        .replace(Protocol.MESSAGE_HEADER_RIGHT_HALF, "")
-                        .replace(Protocol.MESSAGE_HEADER_MIDDLE_HALF, ": ");
-
-            } else if (message.startsWith(Protocol.CONNECTING_GREET_LEFT_HALF)) {
-                return "";
-            } else if (message.startsWith(Protocol.NOTIFY_LOGOFF_HEADER)) {
-                try {
-                    onForceLogoff();
-                } catch (IOException e) {
-                    // Ignore.
-                }
-
-                return "Server closed the connection.";
-            }
-
-            return message;
-        }
-    }
-
     public String getUuid() {
         return uuid;
     }
@@ -267,7 +244,7 @@ public class ClientListener implements Listener {
             sendCommunicationData(Protocol.DEBUG_MODE_STRING, uuid);
             return;
         }
-        
+
         sendMessage(message, uuid);
     }
 
