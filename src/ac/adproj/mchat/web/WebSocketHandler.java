@@ -4,16 +4,22 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 
 public class WebSocketHandler implements WebSocketListener {
     private Session session;
+    private String uuid;
     private static Set<WebSocketHandler> connections;
 
     static {
         connections = Collections.synchronizedSet(new HashSet<>());
+    }
+    
+    {
+        uuid = UUID.randomUUID().toString();
     }
 
     @Override

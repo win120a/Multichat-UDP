@@ -1,0 +1,54 @@
+
+.news_title {
+    font-size : 1.2rem;
+    font-weight: bold;
+}
+
+.links {
+    color : black;
+}
+
+.links:hover {
+    text-decoration: none;
+}
+
+#duke {
+    text-align: right;
+}
+
+@media (min-width: 768px) and (max-width: 992px) {
+    .card {
+        margin-right: 30px;
+        margin-bottom: 10px;
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+}
+
+@media (min-width: 992px) {
+    .card {
+        margin-right: 30px;
+        margin-bottom: 20px;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    #duke {
+        text-align : center;
+    }
+
+    .num {
+        display : none;
+    }
+
+    .card {
+        margin-bottom: 10px;
+        padding : 1px;
+    }
+}
+
+.row {
+    padding-top : 10px;
+}

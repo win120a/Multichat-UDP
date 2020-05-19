@@ -1,13 +1,24 @@
+/*
+    Copyright (C) 2011-2020 Andy Cheung
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 package ac.adproj.mchat.web;
 
-import java.io.IOException;
-
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
@@ -15,6 +26,7 @@ import ac.adproj.mchat.listener.ServerListener;
 
 public class WebStarter implements AutoCloseable {
     private static ServerListener listener;
+    
     private static final String chattingHTML = "<!DOCTYPE html>\r\n" + "<html>\r\n" + "<head>\r\n"
             + "    <title>WebSocket client</title>\r\n" + "    <script>\r\n"
             + "        var ws = new WebSocket(\"ws://127.0.0.1:8090/acmcs/wshandler\");\r\n" + "\r\n"
@@ -34,46 +46,25 @@ public class WebStarter implements AutoCloseable {
 
     private Server server = null;
     private Thread serverThread;
-
-    @SuppressWarnings("serial")
-    public static class MessageHandler extends HttpServlet {
-        @Override
-        public void service(HttpServletRequest request, HttpServletResponse response) {
-            response.setContentType("text/html; charset=utf-8");
-
-            // Declare response status code
-            response.setStatus(HttpServletResponse.SC_OK);
-
-            // Write back response
-            try {
-                response.getWriter().print(chattingHTML);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-    }
     
     @SuppressWarnings("serial")
     public static class WebSocketHandlerFacade extends WebSocketServlet {
         @Override
         public void configure(WebSocketServletFactory arg0) {
-            // TODO Auto-generated method stub
             arg0.register(WebSocketHandler.class);
         }
-        
     }
 
     public void start(int port) throws Exception {
         serverThread = new Thread(() -> {
             server = new Server(port);
             
-            ServletHandler handler = new ServletHandler();
-            handler.addServletWithMapping(WebSocketHandlerFacade.class, "/acmcs/wshandler");
-            handler.addServletWithMapping(MessageHandler.class, "/acmcs/index.jsp");
-            handler.addServletWithMapping(MessageHandler.class, "/acmcs");
+            WebAppContext webapp = new WebAppContext();
+            webapp.setContextPath("/acmcs");
+            webapp.setWar(System.getProperty("user.dir") + "\\webClient.war");
+            webapp.addServlet(WebSocketHandlerFacade.class, "/wshandler");
             
-            server.setHandler(handler);
+            server.setHandler(webapp);
 
             try {
                 server.start();
@@ -87,6 +78,7 @@ public class WebStarter implements AutoCloseable {
     }
 
     public static void main(String[] args) throws Exception {
+        System.out.println(System.getProperty("user.dir"));
         WebStarter i = new WebStarter();
         i.start(8090);
         i.serverThread.join();

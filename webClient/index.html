@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AC Multi-Chat Suite - WebSocket client</title>
+    <script src="websocket.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/bootstrap.css">
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+
+    <meta charset="utf-8">
+
+    <script src="scripts/jquery-3.4.1.js"></script>
+    <script type="text/javascript" src="scripts/bootstrap.bundle.js"></script>
+
+    <style>
+        body {
+            margin-top : 15px;
+        }
+    </style>
+
+    <script>
+        $().ready(() => {
+            $("#informationWindow").modal();
+
+            $("#iw_ok").click(() => {
+                initWS($("#serverIP")[0].value, $("#port")[0].value);
+                $("#informationWindow").modal("hide");
+            });
+
+
+            $("#port, #serverIP, #nickname").keydown(() => {
+                checkVal();
+            });
+
+            $("#port, #serverIP, #nickname").change(() => {
+                checkVal();
+            }); 
+
+            let checkVal = () => {
+                let ip = $("#serverIP")[0].value;
+                let port = $("#port")[0].value;
+                let nickname = $("#nickname")[0].value;
+
+                $("#iw_ok")[0].disabled = (ip.length === 0) || (port.length === 0) || (nickname.length === 0);
+            };
+        });
+    </script>
+</head>
+
+<body style="text-align : center;" class="container-fluid">
+    <div class="modal fade" id="informationWindow" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">请输入用户信息</h5>
+                </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group row">
+                        <label for="serverIP" class="col-3">Server IP: </label>
+                        <input type="text" class="form-control col-8" id="serverIP" required>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="port" class="col-3">Server Port: </label>
+                        <input type="text" class="form-control col-8" id="port" required>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="nickname" class="col-3">Nickname: </label>
+                        <input type="text" class="form-control col-8" id="nickname" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" id="iw_ok" disabled>
+                        确定
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <h3>多端聊天程序 - WebSocket 客户端</h3>
+    <div class="form-group">
+        <textarea id="chatlog" readonly cols="80" rows="15" class="form-control"></textarea><br />
+        <input id="msg" type="text" class="form-control" placeholder="输入消息……" />
+    </div>
+    <button type="submit" id="sendButton" onClick="postToServer()" class="btn btn-primary">发送</button>
+    <button type="submit" id="sendButton" onClick="closeConnect()" class="btn btn-danger">断开连接</button>
+</body>
+</body>
+</html>

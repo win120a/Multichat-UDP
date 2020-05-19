@@ -42,10 +42,14 @@ public class UserManager implements Iterable<User> {
     private Map<String, User> userProfile;
 
     private Set<String> names;
+    
+    // Stored the reserved names.
+    private Set<String> reservedNames;
 
     private UserManager() {
         userProfile = new ConcurrentHashMap<>(16);
         names = Collections.synchronizedSet(new HashSet<>());
+        reservedNames = Collections.synchronizedSet(new HashSet<>());
     }
 
     public void clearAllProfiles() {
@@ -90,6 +94,20 @@ public class UserManager implements Iterable<User> {
     public void register(User u) {
         userProfile.put(u.getUuid(), u);
         names.add(u.getName());
+    }
+    
+    public void reserveName(String name) {
+        if (!names.contains(name)) {
+            names.add(name);
+            reservedNames.add(name);
+        }
+    }
+    
+    public void undoReserveName(String name) {
+        if (reservedNames.contains(name)) {
+            reservedNames.remove(name);
+            names.remove(name);
+        }
     }
 
     @Override

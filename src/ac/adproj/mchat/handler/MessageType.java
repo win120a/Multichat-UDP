@@ -17,30 +17,35 @@
 
 package ac.adproj.mchat.handler;
 
-import java.net.SocketAddress;
-
 /**
- * 消息处理器接口。
+ * 消息类型枚举类。
  * 
  * @author Andy Cheung
- * @since 2020/4/26
+ * @since 2020/5/19
  */
-public interface Handler {
+public enum MessageType {
     /**
-     * 处理协议消息。
-     * 
-     * @param message 原始协议消息
-     * @param address 对方地址
-     * @return 在文本框显示的文字
+     * 用户注册或连接上
      */
-    default String handleMessage(String message, SocketAddress address) {
-        return message;
-    }
+    REGISTER,
     
     /**
-     * 获取消息类型。
-     * @param message 原始协议消息
-     * @return 消息类型
+     * 用户注销或断开
      */
-    MessageType getMessageType(String message);
+    LOGOFF,
+    
+    /**
+     * 用户消息
+     */
+    INCOMING_MESSAGE,
+    
+    /**
+     * 调试模式
+     */
+    DEBUG,
+    
+    /**
+     * 未知
+     */
+    UNKNOWN;
 }

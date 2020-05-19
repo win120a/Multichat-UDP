@@ -25,6 +25,8 @@ import ac.adproj.mchat.model.Protocol;
 import ac.adproj.mchat.model.User;
 import ac.adproj.mchat.service.UserManager;
 
+import static ac.adproj.mchat.handler.MessageType.*;
+
 /**
  * 服务端消息处理类。
  * 
@@ -34,7 +36,7 @@ import ac.adproj.mchat.service.UserManager;
 public class ServerMessageHandler implements Handler {
     private UserManager userManager = UserManager.getInstance();
     private ServerListener listener;
-    
+
     public ServerMessageHandler(ServerListener listener) {
         super();
         this.listener = listener;
@@ -42,68 +44,90 @@ public class ServerMessageHandler implements Handler {
 
     @Override
     public String handleMessage(String message, SocketAddress address) {
-        if (message.startsWith(Protocol.CONNECTING_GREET_LEFT_HALF)) {
-            // 用户注册
-            String[] data = message.replace(Protocol.CONNECTING_GREET_LEFT_HALF, "")
-                    .replace(Protocol.CONNECTING_GREET_RIGHT_HALF, "").split(Protocol.CONNECTING_GREET_MIDDLE_HALF);
+        switch (getMessageType(message)) {
+            case REGISTER:
+                // 用户注册
+                String[] data = message.replace(Protocol.CONNECTING_GREET_LEFT_HALF, "")
+                        .replace(Protocol.CONNECTING_GREET_RIGHT_HALF, "").split(Protocol.CONNECTING_GREET_MIDDLE_HALF);
 
-            String uuid = data[0];
-            String name = data[1];
+                String uuid = data[0];
+                String name = data[1];
 
-            User userObject = new User(uuid, address, name);
+                User userObject = new User(uuid, address, name);
 
-            userManager.register(userObject);
+                userManager.register(userObject);
 
-            return "Client: " + uuid + " (" + name + ") Connected.";
-        } else if (message.startsWith(Protocol.DEBUG_MODE_STRING)) {
-            // 调试模式
-            System.out.println(userManager.toString());
-            return "";
+                return "Client: " + uuid + " (" + name + ") Connected.";
 
-        } else if (message.startsWith(Protocol.NOTIFY_LOGOFF_HEADER)) {
-            // 客户端请求注销
-            SoftReference<String> uuid = new SoftReference<String>(
-                    message.replace(Protocol.NOTIFY_LOGOFF_HEADER, ""));
-
-            try {
-                System.out.println("Disconnecting: " + uuid.get());
-                listener.logoff(uuid.get());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return "Client: " + message.replace(Protocol.NOTIFY_LOGOFF_HEADER, "") + " Disconnected.";
-        } else if (message.startsWith(Protocol.MESSAGE_HEADER_LEFT_HALF)) {
-            // 收到消息
-            String[] data = message.replace(Protocol.MESSAGE_HEADER_LEFT_HALF, "")
-                    .replace(Protocol.MESSAGE_HEADER_RIGHT_HALF, "").split(Protocol.MESSAGE_HEADER_MIDDLE_HALF);
-
-            final int vaildDataArrayLength = 2;
-
-            if (data.length < vaildDataArrayLength) {
+            case DEBUG:
+                // 调试模式
+                System.out.println(userManager.toString());
                 return "";
-            }
 
-            String uuid = data[0];
-            String messageText = data[1];
+            case LOGOFF:
+                // 客户端请求注销
+                SoftReference<String> targetUuid = new SoftReference<String>(
+                        message.replace(Protocol.NOTIFY_LOGOFF_HEADER, ""));
 
-            if (!userManager.containsUuid(uuid)) {
-                // 不接收没有注册机器的任何信息
-                return "";
-            }
-
-            String nameOnlyProtocolMessage = message.replace(uuid, userManager.getName(uuid));
-
-            for (User u : userManager.userProfileValueSet()) {
-                if (!uuid.equals(u.getUuid())) {
-                    listener.sendCommunicationData(nameOnlyProtocolMessage, u.getUuid());
-                    System.out.println("Forwarding message to " + u.getUuid() + " message: " + messageText);
+                try {
+                    System.out.println("Disconnecting: " + targetUuid.get());
+                    listener.logoff(targetUuid.get());
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            }
 
-            message = userManager.getName(uuid) + ": " + messageText;
+                return "Client: " + message.replace(Protocol.NOTIFY_LOGOFF_HEADER, "") + " Disconnected.";
+
+            case INCOMING_MESSAGE:
+                // 收到消息
+                String[] msgData = message.replace(Protocol.MESSAGE_HEADER_LEFT_HALF, "")
+                        .replace(Protocol.MESSAGE_HEADER_RIGHT_HALF, "").split(Protocol.MESSAGE_HEADER_MIDDLE_HALF);
+
+                final int vaildDataArrayLength = 2;
+
+                if (msgData.length < vaildDataArrayLength) {
+                    return "";
+                }
+
+                String fromUuid = msgData[0];
+                String messageText = msgData[1];
+
+                if (!userManager.containsUuid(fromUuid)) {
+                    // 不接收没有注册机器的任何信息
+                    return "";
+                }
+
+                String nameOnlyProtocolMessage = message.replace(fromUuid, userManager.getName(fromUuid));
+
+                for (User u : userManager.userProfileValueSet()) {
+                    if (!fromUuid.equals(u.getUuid())) {
+                        listener.sendCommunicationData(nameOnlyProtocolMessage, u.getUuid());
+                        System.out.println("Forwarding message to " + u.getUuid() + " message: " + messageText);
+                    }
+                }
+
+                message = userManager.getName(fromUuid) + ": " + messageText;
+                break;
+
+            case UNKNOWN:
+            default:
+                return message;
         }
 
         return message;
+    }
+
+    @Override
+    public MessageType getMessageType(String message) {
+        if (message.startsWith(Protocol.CONNECTING_GREET_LEFT_HALF)) {
+            return MessageType.REGISTER;
+        } else if (message.startsWith(Protocol.DEBUG_MODE_STRING)) {
+            return MessageType.DEBUG;
+        } else if (message.startsWith(Protocol.NOTIFY_LOGOFF_HEADER)) {
+            return MessageType.LOGOFF;
+        } else if (message.startsWith(Protocol.MESSAGE_HEADER_LEFT_HALF)) {
+            return MessageType.INCOMING_MESSAGE;
+        }
+        return MessageType.UNKNOWN;
     }
 }
