@@ -17,14 +17,14 @@
 
 package ac.adproj.mchat.ui;
 
-import static ac.adproj.mchat.ui.CommonDialogs.*;
+import static ac.adproj.mchat.ui.CommonDialogs.errorDialog;
+import static ac.adproj.mchat.ui.CommonDialogs.inputDialog;
 
 import java.io.IOException;
 
 import org.eclipse.swt.widgets.Display;
 
 import ac.adproj.mchat.listener.ClientListener;
-import ac.adproj.mchat.model.Protocol;
 
 /**
  * 客户端界面。
@@ -66,40 +66,6 @@ public class ClientUI extends BaseChattingUI {
     }
     
     /**
-     * 向用户获取服务器地址。
-     * 
-     * @return 用户输入的服务器地址
-     */
-    private static byte[] getServerIPAddress() {
-
-        String ipAddress = inputDialog("127.0.0.1", "请输入服务器IPv4地址：", "必须输入IP地址！", (s) -> s.matches("\\d.+\\d.+\\d.+\\d+"));
-
-        String[] address = ipAddress.split("[.]");
-        
-        byte[] addressByteArray = new byte[4];
-        
-        for (int i = 0; i < address.length; i++) {
-            addressByteArray[i] = (byte) Integer.parseInt(address[i]);
-        }
-        
-        return addressByteArray;
-    }
-    
-    /**
-     * 向用户获取端口。
-     * 
-     * @return 用户输入的端口
-     */
-    private static int getPort() {
-        String portString = inputDialog(Integer.toString(Protocol.CLIENT_DEFAULT_PORT), "请输入客户端端口：", "必须输入端口！", (s) -> {
-            int port = Integer.parseInt(s);
-            return s.matches("\\d+") && port > 0 && port <= 65535;
-        });
-        
-        return Integer.parseInt(portString);
-    }
-    
-    /**
      * 向用户获取用户名。
      * 
      * @return 用户名
@@ -115,7 +81,13 @@ public class ClientUI extends BaseChattingUI {
         
         ui.open();
         
-        ui.initListener(getServerIPAddress(), getPort(), getUserName());
+        ClientConfigurationDialog.StatusWrapper cfd = ClientConfigurationDialog.showDialog();
+        
+        if (cfd == null) {
+            System.exit(-1);
+        }
+        
+        ui.initListener(cfd.ip, cfd.port, cfd.nickname);
 
         Display d = ui.getDisplay();
         

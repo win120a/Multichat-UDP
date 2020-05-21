@@ -96,18 +96,20 @@ public class UserManager implements Iterable<User> {
         names.add(u.getName());
     }
     
-    public void reserveName(String name) {
-        if (!names.contains(name)) {
-            names.add(name);
-            reservedNames.add(name);
+    public boolean reserveName(String name) {
+        if (!names.contains(name) && !names.contains(name)) {
+            return names.add(name) & reservedNames.add(name);
         }
+        
+        return false;
     }
     
-    public void undoReserveName(String name) {
-        if (reservedNames.contains(name)) {
-            reservedNames.remove(name);
-            names.remove(name);
+    public boolean undoReserveName(String name) {
+        if (reservedNames.contains(name) && names.contains(name)) {
+            return reservedNames.remove(name) & names.remove(name);
         }
+        
+        return false;
     }
 
     @Override

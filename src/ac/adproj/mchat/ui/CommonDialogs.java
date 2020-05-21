@@ -21,8 +21,10 @@ import java.util.function.Predicate;
 
 import javax.swing.JOptionPane;
 
+import org.eclipse.jface.dialogs.MessageDialog;
+
 /**
- * 对 JOptionPane 的对话框显示方法进行封装的类。
+ * 消息对话框工具类。
  * 
  * @author Andy Cheung
  */
@@ -72,7 +74,7 @@ public final class CommonDialogs {
         } while ((response == null || response.trim().isEmpty() || !filter.test(response)) && counter <= 5);   // 反复询问
 
         if (counter > 5) {
-            errorDialog(errorMessage);
+            swingErrorDialog(errorMessage);
             System.exit(-1);
         }
 
@@ -80,11 +82,20 @@ public final class CommonDialogs {
     }
 
     /**
-     * 显示出错对话框。
+     * 显示出错对话框。(JFace)
      * 
      * @param message 显示的消息
      */
     public static void errorDialog(String message) {
+        MessageDialog.openError(null, "错误", message);
+    }
+    
+    /**
+     * 显示出错对话框。(Swing)
+     * 
+     * @param message 显示的消息
+     */
+    private static void swingErrorDialog(String message) {
         JOptionPane.showMessageDialog(null, message, "ERROR", JOptionPane.ERROR_MESSAGE);
     }
 }

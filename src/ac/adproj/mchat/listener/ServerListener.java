@@ -48,7 +48,7 @@ import ac.adproj.mchat.service.UserNameQueryService;
 import ac.adproj.mchat.ui.CommonDialogs;
 
 /**
- * 聊天服务器核心类。
+ * 聊天服务器 UDP 协议通信类。
  * 
  * @author Andy Cheung
  * @implNote 本服务器主要使用 DatagramChannel 来接受用户的 UDP 连接。其使用 ServerMessageHandler
@@ -135,7 +135,7 @@ public class ServerListener implements Listener {
             return new Thread(r, "服务器 UDP 监听线程 - #" + threadNumber);
         };
 
-        threadPool = new ThreadPoolExecutor(4, 16, 3000, TimeUnit.MILLISECONDS, bq, threadFactory);
+        threadPool = new ThreadPoolExecutor(4, 16, 2, TimeUnit.MINUTES, bq, threadFactory);
 
         userNameQueryService = new UserNameQueryService();
         threadPool.submit(userNameQueryService);
