@@ -20,6 +20,8 @@ package ac.adproj.mchat.handler;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.net.SocketAddress;
+import java.util.Map;
+
 import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.model.Protocol;
 import ac.adproj.mchat.model.User;
@@ -47,17 +49,12 @@ public class ServerMessageHandler implements Handler {
         switch (getMessageType(message)) {
             case REGISTER:
                 // 用户注册
-                String[] data = message.replace(Protocol.CONNECTING_GREET_LEFT_HALF, "")
-                        .replace(Protocol.CONNECTING_GREET_RIGHT_HALF, "").split(Protocol.CONNECTING_GREET_MIDDLE_HALF);
-
-                String uuid = data[0];
-                String name = data[1];
-
-                User userObject = new User(uuid, address, name);
+                Map<String, String> data = REGISTER.tokenize(message);
+                User userObject = new User(data.get("uuid"), address, data.get("name"));
 
                 userManager.register(userObject);
 
-                return "Client: " + uuid + " (" + name + ") Connected.";
+                return "Client: " + data.get("uuid") + " (" + data.get("name") + ") Connected.";
 
             case DEBUG:
                 // 调试模式
@@ -66,8 +63,7 @@ public class ServerMessageHandler implements Handler {
 
             case LOGOFF:
                 // 客户端请求注销
-                SoftReference<String> targetUuid = new SoftReference<String>(
-                        message.replace(Protocol.NOTIFY_LOGOFF_HEADER, ""));
+                SoftReference<String> targetUuid = new SoftReference<String>(LOGOFF.tokenize(message).get("uuid"));
 
                 try {
                     System.out.println("Disconnecting: " + targetUuid.get());
@@ -80,17 +76,15 @@ public class ServerMessageHandler implements Handler {
 
             case INCOMING_MESSAGE:
                 // 收到消息
-                String[] msgData = message.replace(Protocol.MESSAGE_HEADER_LEFT_HALF, "")
-                        .replace(Protocol.MESSAGE_HEADER_RIGHT_HALF, "").split(Protocol.MESSAGE_HEADER_MIDDLE_HALF);
-
-                final int vaildDataArrayLength = 2;
-
-                if (msgData.length < vaildDataArrayLength) {
+                
+                Map<String, String> msgData = INCOMING_MESSAGE.tokenize(message);
+                
+                if (msgData.size() == 0) { 
                     return "";
                 }
-
-                String fromUuid = msgData[0];
-                String messageText = msgData[1];
+                
+                String fromUuid = msgData.get("uuid");
+                String messageText = msgData.get("messageText");
 
                 if (!userManager.containsUuid(fromUuid)) {
                     // 不接收没有注册机器的任何信息

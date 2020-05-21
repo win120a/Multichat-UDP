@@ -26,6 +26,11 @@ import java.util.UUID;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 
+import ac.adproj.mchat.handler.ServerMessageHandler;
+import ac.adproj.mchat.listener.ServerListener;
+import ac.adproj.mchat.listener.WebSocketBridge;
+import ac.adproj.mchat.service.UserManager;
+
 public class WebSocketHandler implements WebSocketListener {
     private Session session;
     private String uuid;
@@ -57,6 +62,22 @@ public class WebSocketHandler implements WebSocketListener {
     @Override
     public void onWebSocketText(String message) {
         broadcastMessage(message);
+        
+        switch(WebSocketBridge.getMessageTypeFacade(message)) {
+            case DEBUG:
+                break;
+            case INCOMING_MESSAGE:
+                
+                break;
+            case LOGOFF:
+                break;
+            case REGISTER:
+                break;
+            case UNKNOWN:
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
