@@ -18,6 +18,6 @@
 	<classpathentry kind="lib" path="C:/DevKits/eclipse/plugins/org.eclipse.ui.workbench_3.118.0.v20200222-0719.jar" sourcepath="C:/DevKits/eclipse/plugins/org.eclipse.ui.workbench_3.118.0.v20200222-0719.jar"/>
 	<classpathentry kind="lib" path="C:/DevKits/eclipse/plugins/com.ibm.icu_64.2.0.v20190507-1337.jar" sourcepath="C:/DevKits/eclipse/plugins/com.ibm.icu_64.2.0.v20190507-1337.jar"/>
 	<classpathentry kind="lib" path="C:/DevKits/eclipse/plugins/org.eclipse.ui.forms_3.9.0.v20200213-1442.jar" sourcepath="C:/DevKits/eclipse/plugins/org.eclipse.ui.forms_3.9.0.v20200213-1442.jar"/>
-	<classpathentry kind="lib" path="C:/DevKits/Libraries/jetty-all-9.4.28.v20200408-uber.jar"/>
+	<classpathentry kind="lib" path="C:/DevKits/Libraries/jetty-all-9.4.28.v20200408-uber.jar" sourcepath="C:/DevKits/Libraries/jetty-src.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

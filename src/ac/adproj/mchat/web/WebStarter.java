@@ -23,6 +23,7 @@ import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
 import ac.adproj.mchat.listener.ServerListener;
+import ac.adproj.mchat.web.res.WebClientLoader;
 
 public class WebStarter implements AutoCloseable {
     private static ServerListener listener;
@@ -44,7 +45,7 @@ public class WebStarter implements AutoCloseable {
             
             WebAppContext webapp = new WebAppContext();
             webapp.setContextPath("/acmcs");
-            webapp.setWar(System.getProperty("user.dir") + "\\webClient.war");
+            webapp.setWar(WebClientLoader.getWebappWarPath());
             webapp.addServlet(WebSocketHandlerFacade.class, "/wshandler");
             
             server.setHandler(webapp);
