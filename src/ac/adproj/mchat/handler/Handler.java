@@ -36,11 +36,4 @@ public interface Handler {
     default String handleMessage(String message, SocketAddress address) {
         return message;
     }
-    
-    /**
-     * 获取消息类型。
-     * @param message 原始协议消息
-     * @return 消息类型
-     */
-    MessageType getMessageType(String message);
 }

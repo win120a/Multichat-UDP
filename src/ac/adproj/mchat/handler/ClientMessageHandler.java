@@ -46,17 +46,4 @@ public class ClientMessageHandler implements Handler {
 
         return message;
     }
-
-    @Override
-    public MessageType getMessageType(String message) {
-        if (message.startsWith(Protocol.MESSAGE_HEADER_LEFT_HALF)) {
-            return INCOMING_MESSAGE;
-        } else if (message.startsWith(Protocol.CONNECTING_GREET_LEFT_HALF)) {
-            return REGISTER;
-        } else if (message.startsWith(Protocol.NOTIFY_LOGOFF_HEADER)) {
-            return LOGOFF;
-        } else {
-            return UNKNOWN;
-        }
-    }
 }

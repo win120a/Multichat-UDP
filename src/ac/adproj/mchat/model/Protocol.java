@@ -112,4 +112,7 @@ public interface Protocol {
      * 用户名查询服务响应 - 用户名没有占用
      */
     String USER_NAME_NOT_EXIST = "<<< Clear >>>";
+    
+    String WEBSOCKET_UUID_HEADER = "<WS><<";
+    String WEBSOCKET_UUID_TAIL = ">>";
 }

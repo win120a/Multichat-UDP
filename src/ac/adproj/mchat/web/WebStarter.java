@@ -17,7 +17,16 @@
 
 package ac.adproj.mchat.web;
 
+import java.io.IOException;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
@@ -38,7 +47,22 @@ public class WebStarter implements AutoCloseable {
             arg0.register(WebSocketHandler.class);
         }
     }
-
+    
+    @SuppressWarnings("serial")
+    public static class PageRedirector extends HttpServlet {
+        @Override
+        public void service(HttpServletRequest req, HttpServletResponse resp) {
+            resp.setHeader("Location", req.getLocalAddr() + "/acmcs");
+            resp.setStatus(HttpServletResponse.SC_FOUND);
+            
+            try {
+                resp.flushBuffer();
+            } catch (IOException e) {
+                // ignore
+            }
+        }
+    }
+    
     public void start(int port) throws Exception {
         serverThread = new Thread(() -> {
             server = new Server(port);

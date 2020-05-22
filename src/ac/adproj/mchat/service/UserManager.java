@@ -28,6 +28,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import ac.adproj.mchat.model.User;
 
+/**
+ * 用户管理器。
+ * 
+ * @author Andy Cheung
+ * @since 2020/5/19
+ */
 public class UserManager implements Iterable<User> {
     private static UserManager instance;
     
@@ -43,7 +49,7 @@ public class UserManager implements Iterable<User> {
 
     private Set<String> names;
     
-    // Stored the reserved names.
+    // Store the reserved names.
     private Set<String> reservedNames;
 
     private UserManager() {

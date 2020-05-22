@@ -32,8 +32,6 @@ import ac.adproj.mchat.model.Protocol;
 public enum MessageType {
     /**
      * 用户注册或连接上
-     * 
-     * data[0] = UUID; data[1] = User name
      */
     REGISTER,
 
@@ -53,9 +51,35 @@ public enum MessageType {
     DEBUG,
 
     /**
+     * 用户名查重请求消息
+     */
+    USERNAME_QUERY_REQUEST, 
+    
+    /**
      * 未知
      */
     UNKNOWN;
+    
+    /**
+     * 获取消息类型（对象）。
+     * 
+     * @param message 协议消息
+     * @return 对应的 MessageType 对象。
+     */
+    public static MessageType getMessageType(String message) {
+        if (message.startsWith(Protocol.CONNECTING_GREET_LEFT_HALF)) {
+            return REGISTER;
+        } else if (message.startsWith(Protocol.DEBUG_MODE_STRING)) {
+            return DEBUG;
+        } else if (message.startsWith(Protocol.NOTIFY_LOGOFF_HEADER)) {
+            return LOGOFF;
+        } else if (message.startsWith(Protocol.MESSAGE_HEADER_LEFT_HALF)) {
+            return INCOMING_MESSAGE;
+        } else if (message.startsWith(Protocol.CHECK_DUPLICATE_REQUEST_HEADER)) {
+            return USERNAME_QUERY_REQUEST;
+        }
+        return MessageType.UNKNOWN;
+    }
 
     /**
      * 消息元素分离方法。
@@ -101,7 +125,9 @@ public enum MessageType {
                 ret = of("uuid", fromUuid, "messageText", messageText);
                 
                 break;
-                
+            case USERNAME_QUERY_REQUEST:
+                ret = of("username", message.replace(Protocol.CHECK_DUPLICATE_REQUEST_HEADER, ""));
+                break;
             case UNKNOWN:
             default:
                 ret = Collections.emptyMap();
