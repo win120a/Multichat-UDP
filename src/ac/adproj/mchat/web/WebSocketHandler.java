@@ -93,10 +93,6 @@ public class WebSocketHandler implements WebSocketListener {
 
                 break;
 
-            case LOGOFF:
-                broadcastMessage(message);
-                break;
-
             case USERNAME_QUERY_REQUEST:
                 String name = USERNAME_QUERY_REQUEST.tokenize(message).get("username");
 

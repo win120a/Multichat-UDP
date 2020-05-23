@@ -29,7 +29,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import ac.adproj.mchat.model.User;
 
 /**
- * 用户管理器。
+ * <p>用户管理器。</p>
+ * 
+ * <p>此类为单例类，主要目的是在 WebSocket 服务器和 UDP 服务器中间共享用户注册的数据。</p>
  * 
  * @author Andy Cheung
  * @since 2020/5/19
@@ -37,6 +39,11 @@ import ac.adproj.mchat.model.User;
 public class UserManager implements Iterable<User> {
     private static UserManager instance;
     
+    /**
+     * 获得此类的唯一实例。
+     * 
+     * @return 实例
+     */
     public static UserManager getInstance() {
         if (instance == null) {
             instance = new UserManager();

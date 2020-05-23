@@ -24,37 +24,31 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
-import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.web.res.WebClientLoader;
 
 public class WebStarter implements AutoCloseable {
-    private static ServerListener listener;
-
     private Server server = null;
     private Thread serverThread;
-    
+
     @SuppressWarnings("serial")
-    public static class WebSocketHandlerFacade extends WebSocketServlet {
+    public static final class WebSocketHandlerFacade extends WebSocketServlet {
         @Override
         public void configure(WebSocketServletFactory arg0) {
             arg0.register(WebSocketHandler.class);
         }
     }
-    
+
     @SuppressWarnings("serial")
-    public static class PageRedirector extends HttpServlet {
+    public static final class PageRedirector extends HttpServlet {
         @Override
         public void service(HttpServletRequest req, HttpServletResponse resp) {
             resp.setHeader("Location", req.getLocalAddr() + "/acmcs");
             resp.setStatus(HttpServletResponse.SC_FOUND);
-            
+
             try {
                 resp.flushBuffer();
             } catch (IOException e) {
@@ -62,16 +56,16 @@ public class WebStarter implements AutoCloseable {
             }
         }
     }
-    
+
     public void start(int port) throws Exception {
         serverThread = new Thread(() -> {
             server = new Server(port);
-            
+
             WebAppContext webapp = new WebAppContext();
             webapp.setContextPath("/acmcs");
             webapp.setWar(WebClientLoader.getWebappWarPath());
             webapp.addServlet(WebSocketHandlerFacade.class, "/wshandler");
-            
+
             server.setHandler(webapp);
 
             try {
