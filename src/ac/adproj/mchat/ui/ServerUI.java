@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Display;
 
 import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.service.MessageDistributor;
 import ac.adproj.mchat.web.WebStarter;
 
 /**
@@ -34,9 +35,11 @@ public class ServerUI extends BaseChattingUI {
     private ServerListener listener;
 
     private void initListener() throws IOException {
-        listener = new ServerListener(this, (message) ->  {
-            appendMessageDisplay(message);
+        MessageDistributor.getInstance().registerSubscriber((message) -> {
+            this.getDisplay().asyncExec(() -> appendMessageDisplay(message));
         });
+        
+        listener = ServerListener.getInstance();
     }
 
     @Override
@@ -45,8 +48,6 @@ public class ServerUI extends BaseChattingUI {
             MessageDialog.openError(ServerUI.this, "出错", "没有客户端登录。");
             return;
         }
-        
-        appendMessageDisplay("SERVER" + ": " + text);
         
         listener.sendMessage(text, Protocol.BROADCAST_MESSAGE_UUID);
     }

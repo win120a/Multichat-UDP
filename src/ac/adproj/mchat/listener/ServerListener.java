@@ -34,15 +34,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-
-import org.eclipse.swt.widgets.Shell;
 
 import ac.adproj.mchat.handler.Handler;
+import ac.adproj.mchat.handler.MessageType;
 import ac.adproj.mchat.handler.ServerMessageHandler;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.Protocol;
 import ac.adproj.mchat.model.User;
+import ac.adproj.mchat.service.CommonThreadPool;
+import ac.adproj.mchat.service.MessageDistributor;
 import ac.adproj.mchat.service.UserManager;
 import ac.adproj.mchat.service.UserNameQueryService;
 import ac.adproj.mchat.ui.CommonDialogs;
@@ -63,29 +63,35 @@ import ac.adproj.mchat.ui.CommonDialogs;
 public class ServerListener implements Listener {
 
     private DatagramChannel serverDatagramChannel;
-
     private ExecutorService threadPool;
-
     private UserManager userManager = UserManager.getInstance();
-
-    private Shell shell;
-    private Consumer<String> uiAction;
     private UserNameQueryService userNameQueryService;
 
     private int threadNumber = 0;
+    
+    private static ServerListener instance;
+    
+    /**
+     * 获得此类的唯一实例。
+     * 
+     * @return 实例
+     * @throws IOException 如果读写出错
+     */
+    public static ServerListener getInstance() throws IOException {
+        if (instance == null) {
+            instance = new ServerListener();
+        }
+
+        return instance;
+    }
 
     /**
      * 构造服务端监听器类。
      * 
-     * @param shell    服务器 UI 窗口
-     * @param uiAction 包装由服务器 UI 指定的行为，其在接受、处理完消息后执行。
      * @throws IOException 如果读写出错
      */
-    public ServerListener(Shell shell, Consumer<String> uiAction) throws IOException {
-        this.shell = shell;
-        this.uiAction = uiAction;
-
-        init(shell, uiAction);
+    private ServerListener() throws IOException {
+        init();
     }
 
     /**
@@ -110,9 +116,11 @@ public class ServerListener implements Listener {
 
             String message = handler.handleMessage(sbuffer.toString(), address);
 
-            shell.getDisplay().syncExec(() -> {
-                uiAction.accept(message);
-            });
+            try {
+                MessageDistributor.getInstance().sendUIMessage(message);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             bb.clear();
         }
@@ -125,7 +133,7 @@ public class ServerListener implements Listener {
      * @param uiAction 包装由服务器 UI 指定的行为，其在接受、处理完消息后执行。
      * @throws IOException 如果读写出错
      */
-    private void init(Shell shell, Consumer<String> uiAction) throws IOException {
+    private void init() throws IOException {
         ServerMessageHandler handler = new ServerMessageHandler(this);
 
         BlockingQueue<Runnable> bq = new LinkedBlockingQueue<>(16);
@@ -204,6 +212,17 @@ public class ServerListener implements Listener {
         final ByteBuffer bb = ByteBuffer.wrap(text.getBytes(StandardCharsets.UTF_8));
 
         if (uuid.equals(Protocol.BROADCAST_MESSAGE_UUID)) {
+            // 服务器发出的消息。
+            if (MessageType.INCOMING_MESSAGE.tokenize(text).get("uuid").equals(Protocol.BROADCAST_MESSAGE_UUID)) {
+                try {
+                    // 同时更新 UI 和 WebSocket
+                    MessageDistributor.getInstance().sendRawProtocolMessage(text);
+                } catch (InterruptedException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
+            
             for (User u : userManager.userProfileValueSet()) {
                 try {
                     bb.rewind();
@@ -270,5 +289,7 @@ public class ServerListener implements Listener {
         threadPool.shutdownNow();
         userManager.clearAllProfiles();
         serverDatagramChannel.close();
+        
+        CommonThreadPool.shutdown();
     }
 }

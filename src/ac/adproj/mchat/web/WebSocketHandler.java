@@ -29,8 +29,11 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 
 import ac.adproj.mchat.handler.MessageType;
+import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.service.MessageDistributor;
 import ac.adproj.mchat.service.UserManager;
+import ac.adproj.mchat.service.MessageDistributor.SubscriberCallback;
 
 import static ac.adproj.mchat.handler.MessageType.*;
 
@@ -40,6 +43,26 @@ public class WebSocketHandler implements WebSocketListener {
     private String nickname;
 
     private static Set<WebSocketHandler> connections;
+    
+    public static class WebSocketBridge implements SubscriberCallback {
+        @Override
+        public void onMessageReceived(String uiMessage) {
+            String name = uiMessage.split("\\s*:\\s*")[0];
+            
+            for (WebSocketHandler conn : connections) {
+                if (conn.nickname.equals(name) || conn.uuid.equals(name)) {
+                    continue;
+                }
+                
+                try {
+                    conn.session.getRemote().sendString(uiMessage);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     // UUID, Name
     private static Map<String, String> nameBindings;
@@ -47,6 +70,7 @@ public class WebSocketHandler implements WebSocketListener {
     static {
         connections = Collections.synchronizedSet(new HashSet<>(16));
         nameBindings = new ConcurrentHashMap<>(16);
+        MessageDistributor.getInstance().registerSubscriber(new WebSocketBridge());
     }
 
     {
@@ -78,7 +102,13 @@ public class WebSocketHandler implements WebSocketListener {
 
             case INCOMING_MESSAGE:
                 String protoMsg = message.replace(uuid, nickname);
-                Map<String, String> ic_result = INCOMING_MESSAGE.tokenize(protoMsg);
+                
+                try {
+                    MessageDistributor.getInstance().sendRawProtocolMessage(protoMsg);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+                
                 broadcastMessage(protoMsg);
                 break;
 
@@ -141,6 +171,13 @@ public class WebSocketHandler implements WebSocketListener {
                     }
                 }
             }
+        }
+        
+        try {
+            ServerListener.getInstance().sendCommunicationData(message, Protocol.BROADCAST_MESSAGE_UUID);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 }

@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Shell;
 import ac.adproj.mchat.handler.ClientMessageHandler;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.service.CommonThreadPool;
 
 /**
  * 客户端监听器。
@@ -162,9 +163,9 @@ public class ClientListener implements Listener {
             uiActions.accept("Connected to Server, UserName: " + username + ", UUID: " + uuid);
         });
 
-        new Thread(() -> {
+        CommonThreadPool.execute(() -> {
 
-            while (true) {
+            while (socketChannel.isOpen()) {
                 final ByteBuffer buffer = ByteBuffer.allocate(Protocol.BUFFER_SIZE);
 
                 Display display = shell.getDisplay();
@@ -201,13 +202,17 @@ public class ClientListener implements Listener {
                     if (exc.getClass().getName().contains("AsynchronousCloseException")) {
                         return;
                     }
+                    
+                    if (exc.getClass() == InterruptedException.class) {
+                        break;
+                    }
 
                     exc.printStackTrace();
 
                     display.syncExec(() -> MessageDialog.openError(shell, "出错", "客户机读取出错：" + exc.getMessage()));
                 }
             }
-        }).start();
+        });
     }
 
     public String getUuid() {
@@ -286,5 +291,7 @@ public class ClientListener implements Listener {
     @Override
     public void close() throws Exception {
         logoff();
+        
+        CommonThreadPool.shutdown();
     }
 }

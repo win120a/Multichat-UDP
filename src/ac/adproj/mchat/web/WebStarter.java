@@ -90,5 +90,6 @@ public class WebStarter implements AutoCloseable {
     @Override
     public void close() throws Exception {
         server.stop();
+        serverThread.interrupt();
     }
 }
