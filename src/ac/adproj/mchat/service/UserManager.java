@@ -33,6 +33,8 @@ import ac.adproj.mchat.model.User;
  * 
  * <p>此类为单例类，主要目的是在 WebSocket 服务器和 UDP 服务器中间共享用户注册的数据。</p>
  * 
+ * <p><b>说明：WebSocket 的用户并不通过该类管理，但是其用户名会在此类保存。</b></p>
+ * 
  * @author Andy Cheung
  * @since 2020/5/19
  */
@@ -65,50 +67,102 @@ public class UserManager implements Iterable<User> {
         reservedNames = Collections.synchronizedSet(new HashSet<>());
     }
 
+    /**
+     * 清除全部注册用户信息。（不包含占位用户名信息）
+     */
     public void clearAllProfiles() {
         userProfile.clear();
         names.clear();
     }
 
+    /**
+     * 查询注册用户表中是否存在这个用户名。
+     * @param name 查询的用户名
+     * @return 用户名存在，返回真。
+     */
     public boolean containsName(String name) {
         return names.contains(name);
     }
     
+    /**
+     * 查询注册用户表中是否存在这个 UUID
+     * @param name 查询的 UUID
+     * @return UUID 存在，返回真。
+     */
     public boolean containsUuid(String uuid) {
         return userProfile.containsKey(uuid);
     }
 
+    /**
+     * 删除注册用户数据。
+     * @param uuid 用户 UUID
+     * @return 是否删除成功
+     */
     public User deleteUserProfile(String uuid) {
         names.remove(lookup(uuid).getName());
         return userProfile.remove(uuid);
     }
 
+    /**
+     * 获取 UUID 号对应用户名。
+     * @param uuid
+     * @return
+     */
     public String getName(String uuid) {
         return lookup(uuid).getName();
     }
 
+    /**
+     * 判断用户信息是否空白。
+     * @return 空白为真。
+     */
     public boolean isEmptyUserProfile() {
         return userProfile.isEmpty();
     }
 
+    /**
+     * <p>获取 UDP 用户集合的只读迭代器。</p>
+     * 
+     * <p><b>此迭代器不可调用 remove 方法，否则产生异常。</b></p>
+     */
     @Override
     public Iterator<User> iterator() {
-        return userProfile.values().iterator();
+        return Collections.unmodifiableCollection(userProfile.values()).iterator();
     }
 
+    /**
+     * 获取 UUID 对应的 User 对象。
+     * @param uuid UUID
+     * @return 对应 User 对象
+     */
     public User lookup(String uuid) {
         return userProfile.get(uuid);
     }
 
+    /**
+     * 注册用户到用户表。
+     * @param uuid UUID 号
+     * @param name 用户名
+     * @param address 远端 IP 地址
+     */
     public void register(String uuid, String name, SocketAddress address) {
         register(new User(uuid, address, name));
     }
 
+    /**
+     * 注册用户到用户表。（直接注册 User 对象）
+     * @param u User 对象
+     */
     public void register(User u) {
         userProfile.put(u.getUuid(), u);
         names.add(u.getName());
     }
     
+    /**
+     * 注册用户名，但不对应 User 对象。（占用用户名，主要为 WebSocket 服务器使用）
+     * @param name 用户名。
+     * @return 是否注册成功。
+     */
     public boolean reserveName(String name) {
         if (!names.contains(name) && !names.contains(name)) {
             return names.add(name) & reservedNames.add(name);
@@ -117,6 +171,11 @@ public class UserManager implements Iterable<User> {
         return false;
     }
     
+    /**
+     * 注销不对应 User 对象的用户名。（主要为 WebSocket 服务器使用）
+     * @param name 用户名。
+     * @return 是否注销成功。
+     */
     public boolean undoReserveName(String name) {
         if (reservedNames.contains(name) && names.contains(name)) {
             return reservedNames.remove(name) & names.remove(name);
@@ -125,12 +184,19 @@ public class UserManager implements Iterable<User> {
         return false;
     }
 
+    /**
+     * 获取用户表全部数据的 String 表示
+     */
     @Override
     public String toString() {
         return userProfile.toString();
     }
 
+    /**
+     * 返回 UDP 用户地址表的只读视图。
+     * @return 只读 UDP 用户地址表
+     */
     public Collection<User> userProfileValueSet() {
-        return userProfile.values();
+        return Collections.unmodifiableCollection(userProfile.values());
     }
 }

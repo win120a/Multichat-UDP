@@ -32,12 +32,12 @@ import ac.adproj.mchat.handler.MessageType;
  */
 public class MessageDistributor {
     private static MessageDistributor instance;
+    
+    static {
+        instance = new MessageDistributor();
+    }
 
     public static MessageDistributor getInstance() {
-        if (instance == null) {
-            instance = new MessageDistributor();
-        }
-
         return instance;
     }
 
