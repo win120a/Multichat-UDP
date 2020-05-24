@@ -17,28 +17,27 @@
 
 package ac.adproj.mchat.web;
 
-import java.io.IOException;
-
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
+import ac.adproj.mchat.service.CommonThreadPool;
 import ac.adproj.mchat.web.res.WebClientLoader;
 
-public class WebStarter implements AutoCloseable {
+/**
+ * WebSocket 服务器和 WebSocket 客户端 （嵌入式 Jetty 服务器）的启动代码所在类。
+ * 
+ * @author Andy Cheung
+ * @since 2020/5/24 (originally 2020/5/18)
+ */
+public class WebServerStarter implements AutoCloseable {
     private Server server = null;
     private Thread serverThread;
 
     /**
-     * WebSocket 服务 (Servlet) 的外观类，主要作用是包装 WebSocketHandler 类，成为处理 Servlet 的
+     * WebSocket 服务的 (Servlet) 外观类，主要作用是包装 WebSocketHandler 类，供 Jetty 使用。
      * 
      * @author Andy Cheung
      */
@@ -50,8 +49,15 @@ public class WebStarter implements AutoCloseable {
         }
     }
     
-    public void start(int port) throws Exception {
-        serverThread = new Thread(() -> {
+    /**
+     * 启动嵌入式 Jetty 容器。
+     * 
+     * @param port HTTP 端口
+     */
+    public void start(int port) {
+        CommonThreadPool.execute(() -> {
+            serverThread = Thread.currentThread();
+            
             server = new Server(port);
             
             WebAppContext webapp = new WebAppContext();
@@ -68,13 +74,11 @@ public class WebStarter implements AutoCloseable {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-        });
-        serverThread.start();
+        }, "Jetty HTTP Server");
     }
-
+    
     public static void main(String[] args) throws Exception {
-        System.out.println(System.getProperty("user.dir"));
-        WebStarter i = new WebStarter();
+        WebServerStarter i = new WebServerStarter();
         i.start(8090);
         i.serverThread.join();
         i.close();

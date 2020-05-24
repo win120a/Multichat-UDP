@@ -67,11 +67,12 @@ public final class CommonDialogs {
         String response;
         int counter = 0;
 
+        // 反复询问 6 次
         do {
             response = (String) JOptionPane.showInputDialog(null, askMessage, "Input", JOptionPane.QUESTION_MESSAGE,
                     null, null, defaultString);
             counter++;
-        } while ((response == null || response.trim().isEmpty() || !filter.test(response)) && counter <= 5);   // 反复询问
+        } while ((response == null || response.trim().isEmpty() || !filter.test(response)) && counter <= 5);
 
         if (counter > 5) {
             swingErrorDialog(errorMessage);

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +38,12 @@ import ac.adproj.mchat.service.MessageDistributor.SubscriberCallback;
 
 import static ac.adproj.mchat.handler.MessageType.*;
 
+/**
+ * WebSocket 消息处理器。
+ * 
+ * @author Andy Cheung
+ * @since 2020/5/18
+ */
 public class WebSocketHandler implements WebSocketListener {
     private Session session;
     private String uuid;
@@ -179,5 +186,26 @@ public class WebSocketHandler implements WebSocketListener {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return uuid.hashCode();
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        
+        WebSocketHandler other = (WebSocketHandler) obj;
+        return Objects.equals(uuid, other.uuid);
     }
 }

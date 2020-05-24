@@ -17,16 +17,44 @@ public class CommonThreadPool {
     private static int threadNumber = 0;
 
     private static BlockingQueue<Runnable> bq = new LinkedBlockingQueue<>(16);
+    private static String comment = "";
 
     private static ThreadFactory threadFactory = r -> {
-        threadNumber++;
-        Thread t = new Thread(r, "零散线程池线程 - #" + threadNumber);
-        return t;
+        synchronized (comment) {
+            threadNumber++;
+            
+            String threadName = "零散线程池线程 - #" + threadNumber + (comment.isEmpty() ? "" : " - " + comment);
+            
+            Thread t = new Thread(r, threadName);
+            
+            comment = "";
+            
+            return t;
+        }
     };
 
-    private static ExecutorService threadPool = new ThreadPoolExecutor(2, 8, 1, TimeUnit.MINUTES, bq, threadFactory);
+    private static ExecutorService threadPool = new ThreadPoolExecutor(3, 8, 1, TimeUnit.MINUTES, bq, threadFactory);
     
-    public static void execute(Runnable r) {
+    /**
+     * 向线程池提交线程。
+     * 
+     * @param r 线程执行体
+     */
+    public synchronized static void execute(Runnable r) {
+        threadPool.execute(r);
+    }
+    
+    /**
+     * 向线程池提交线程，并根据说明文字命名。
+     * 
+     * @param r 线程执行体
+     * @param stmt 说明文字
+     */
+    public synchronized static void execute(Runnable r, String stmt) {
+        synchronized (comment) {
+            comment = stmt;
+        }
+        
         threadPool.execute(r);
     }
     

@@ -22,14 +22,26 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+/**
+ * WebSocket 客户端应用包的加载程序。
+ * 
+ * @author Andy Cheung
+ * @since 2020/5/22
+ */
 public final class WebClientLoader {
+    public static final String WAR_NAME_IN_RESOURCE_PATH = "webClient.war"; 
+    /**
+     * 加载应用包。（退出时会删除）
+     * @return 应用包释放到的路径
+     */
     public static String getWebappWarPath() {
         FileOutputStream fos = null;
 
         try (BufferedInputStream is = new BufferedInputStream(
-                WebClientLoader.class.getResourceAsStream("webClient.war"))) {
+                WebClientLoader.class.getResourceAsStream(WAR_NAME_IN_RESOURCE_PATH))) {
             
             File f = File.createTempFile("acmc-webC-", ".war");
+            f.deleteOnExit();
             fos = new FileOutputStream(f);
 
             int dataBit;

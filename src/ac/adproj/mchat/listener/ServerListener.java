@@ -117,7 +117,7 @@ public class ServerListener implements Listener {
             String message = handler.handleMessage(sbuffer.toString(), address);
 
             try {
-                MessageDistributor.getInstance().sendUIMessage(message);
+                MessageDistributor.getInstance().sendUiMessage(message);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

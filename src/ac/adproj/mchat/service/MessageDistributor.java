@@ -37,6 +37,13 @@ public class MessageDistributor {
         instance = new MessageDistributor();
     }
 
+
+    private MessageDistributor() {
+        uiMessages = new LinkedBlockingQueue<>();
+        callbacks = new LinkedList<>();
+        CommonThreadPool.execute(new MessageDistributingService(), "消息分发服务");
+    }
+    
     public static MessageDistributor getInstance() {
         return instance;
     }
@@ -75,13 +82,7 @@ public class MessageDistributor {
         void onMessageReceived(String uiMessage);
     }
 
-    public MessageDistributor() {
-        uiMessages = new LinkedBlockingQueue<>();
-        callbacks = new LinkedList<>();
-        CommonThreadPool.execute(new MessageDistributingService());
-    }
-
-    public void sendUIMessage(String message) throws InterruptedException {
+    public void sendUiMessage(String message) throws InterruptedException {
         uiMessages.put(message);
     }
     
