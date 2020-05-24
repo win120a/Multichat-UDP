@@ -137,16 +137,34 @@ public enum MessageType {
         return ret;
     }
 
+    /**
+     * 根据一对参数返回只读 Map。（类似于 Java 9 中 Map.of 方法的作用）
+     * @param <K> 键类型
+     * @param <V> 值类型
+     * @param k1 第一个键 
+     * @param v1 第一个值
+     * @return 内含 [k1, v1] 一个元素的只读的 Map
+     */
     private <K, V> Map<K, V> of(K k1, V v1) {
-        HashMap<K, V> hm = new HashMap<>();
+        HashMap<K, V> hm = new HashMap<>(1);
 
         hm.put(k1, v1);
 
         return Collections.unmodifiableMap(hm);
     }
 
+    /**
+     * 根据两对参数返回只读 Map。（类似于 Java 9 中 Map.of 方法的作用）
+     * @param <K> 键类型
+     * @param <V> 值类型
+     * @param k1 第一个键 
+     * @param v1 第一个值
+     * @param k2 第二个键 
+     * @param v2 第二个值
+     * @return 内含 [k1, v1], [k2, v2] 两个元素的只读的 Map
+     */
     private <K, V> Map<K, V> of(K k1, V v1, K k2, V v2) {
-        HashMap<K, V> hm = new HashMap<>();
+        HashMap<K, V> hm = new HashMap<>(2);
 
         hm.put(k1, v1);
         hm.put(k2, v2);

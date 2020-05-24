@@ -61,7 +61,17 @@ public class MessageDistributor {
         }
     }
     
+    /**
+     * 定义收到信息后的回调方法。
+     * 
+     * @author Andy Cheung
+     * @since 2020.5.24
+     */
     public static interface SubscriberCallback {
+        /**
+         * 收到信息后的回调方法。
+         * @param uiMessage 处理后的，对用户友好的信息。
+         */
         void onMessageReceived(String uiMessage);
     }
 
@@ -75,6 +85,11 @@ public class MessageDistributor {
         uiMessages.put(message);
     }
     
+    /**
+     * 直接将协议消息（只限 INCOMING_MESSAGE 类型的）转化为 UI 消息的快捷方法。
+     * @param message “消息”类协议消息
+     * @throws InterruptedException 如果操作被迫中断
+     */
     public void sendRawProtocolMessage(String message) throws InterruptedException {
         Map<String, String> tresult = MessageType.INCOMING_MESSAGE.tokenize(message);
         uiMessages.put(tresult.get("uuid") + ": " + tresult.get("messageText"));

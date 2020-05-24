@@ -24,6 +24,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
@@ -34,38 +37,28 @@ public class WebStarter implements AutoCloseable {
     private Server server = null;
     private Thread serverThread;
 
+    /**
+     * WebSocket 服务 (Servlet) 的外观类，主要作用是包装 WebSocketHandler 类，成为处理 Servlet 的
+     * 
+     * @author Andy Cheung
+     */
     @SuppressWarnings("serial")
-    public static final class WebSocketHandlerFacade extends WebSocketServlet {
+    private static final class WebSocketHandlerFacade extends WebSocketServlet {
         @Override
         public void configure(WebSocketServletFactory arg0) {
             arg0.register(WebSocketHandler.class);
         }
     }
-
-    @SuppressWarnings("serial")
-    public static final class PageRedirector extends HttpServlet {
-        @Override
-        public void service(HttpServletRequest req, HttpServletResponse resp) {
-            resp.setHeader("Location", req.getLocalAddr() + "/acmcs");
-            resp.setStatus(HttpServletResponse.SC_FOUND);
-
-            try {
-                resp.flushBuffer();
-            } catch (IOException e) {
-                // ignore
-            }
-        }
-    }
-
+    
     public void start(int port) throws Exception {
         serverThread = new Thread(() -> {
             server = new Server(port);
-
+            
             WebAppContext webapp = new WebAppContext();
             webapp.setContextPath("/acmcs");
             webapp.setWar(WebClientLoader.getWebappWarPath());
-            webapp.addServlet(WebSocketHandlerFacade.class, "/wshandler");
-
+            webapp.addServlet(new ServletHolder(new WebSocketHandlerFacade()), "/wshandler");
+            
             server.setHandler(webapp);
 
             try {
