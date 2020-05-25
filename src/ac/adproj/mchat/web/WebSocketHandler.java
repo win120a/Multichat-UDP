@@ -51,6 +51,21 @@ public class WebSocketHandler implements WebSocketListener {
 
     private static Set<WebSocketHandler> connections;
     
+    public static boolean isConnected() {
+        return !connections.isEmpty();
+    }
+
+    static {
+        connections = Collections.synchronizedSet(new HashSet<>(16));
+        nameBindings = new ConcurrentHashMap<>(16);
+        MessageDistributor.getInstance().registerSubscriber(new WebSocketBridge());
+    }
+
+    {
+        uuid = UUID.randomUUID().toString();
+    }
+
+    
     public static class WebSocketBridge implements SubscriberCallback {
         @Override
         public void onMessageReceived(String uiMessage) {
@@ -73,16 +88,6 @@ public class WebSocketHandler implements WebSocketListener {
 
     // UUID, Name
     private static Map<String, String> nameBindings;
-
-    static {
-        connections = Collections.synchronizedSet(new HashSet<>(16));
-        nameBindings = new ConcurrentHashMap<>(16);
-        MessageDistributor.getInstance().registerSubscriber(new WebSocketBridge());
-    }
-
-    {
-        uuid = UUID.randomUUID().toString();
-    }
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {

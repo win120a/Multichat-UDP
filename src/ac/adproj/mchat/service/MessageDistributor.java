@@ -62,7 +62,11 @@ public class MessageDistributor {
                         cb.onMessageReceived(message);
                     }
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
                     break;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
                 }
             }
         }

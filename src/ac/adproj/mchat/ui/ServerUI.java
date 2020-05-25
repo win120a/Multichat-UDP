@@ -25,6 +25,7 @@ import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.model.Protocol;
 import ac.adproj.mchat.service.MessageDistributor;
 import ac.adproj.mchat.web.WebServerStarter;
+import ac.adproj.mchat.web.WebSocketHandler;
 
 /**
  * 服务器端界面。
@@ -44,7 +45,7 @@ public class ServerUI extends BaseChattingUI {
 
     @Override
     protected void handleSendMessage(String text) {
-        if (!listener.isConnected()) {
+        if (!listener.isConnected() && !WebSocketHandler.isConnected()) {
             MessageDialog.openError(ServerUI.this, "出错", "没有客户端登录。");
             return;
         }
