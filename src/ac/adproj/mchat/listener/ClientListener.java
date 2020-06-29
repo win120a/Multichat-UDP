@@ -23,6 +23,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -30,6 +31,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
+import ac.adproj.mchat.crypto.key.AESKeyServiceImpl;
 import ac.adproj.mchat.handler.ClientMessageHandler;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.Protocol;
@@ -44,6 +46,7 @@ public class ClientListener implements Listener {
     private DatagramChannel socketChannel;
     private String uuid;
     private String name;
+    private Key key;
 
     /**
      * 构造客户端监听器类。
@@ -54,9 +57,11 @@ public class ClientListener implements Listener {
      * @param port      客户端端口
      * @param username  用户名
      */
-    public ClientListener(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username)
+    public ClientListener(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username, String keyFile)
             throws IOException {
         this.name = username;
+        this.key = new AESKeyServiceImpl().readKeyFromFile(keyFile);
+        
         init(shell, uiActions, address, port, username);
     }
 

@@ -37,13 +37,15 @@ public class ClientConfigurationDialog extends Shell {
     private Text port;
     private Text nicknameField;
     private StatusWrapper status;
+    private Text keyFile;
 
     class StatusWrapper {
         public final byte[] ip;
         public final int port;
         public final String nickname;
+        public final String keyFile;
         
-        public StatusWrapper(String ip, String port, String nickname) {
+        public StatusWrapper(String ip, String port, String nickname, String keyFile) {
             super();
             
             String[] address = ip.split("[.]");
@@ -57,6 +59,7 @@ public class ClientConfigurationDialog extends Shell {
             this.ip = addressByteArray;
             this.port = Integer.parseInt(port);
             this.nickname = nickname;
+            this.keyFile = keyFile;
         }
     }
     
@@ -119,7 +122,7 @@ public class ClientConfigurationDialog extends Shell {
                     return;
                 }
                 
-                status = new StatusWrapper(serverIP.getText(), port.getText(), nicknameField.getText());
+                status = new StatusWrapper(serverIP.getText(), port.getText(), nicknameField.getText(), keyFile.getText());
                 ClientConfigurationDialog.this.setVisible(false);
                 dispose();
             }
@@ -177,6 +180,44 @@ public class ClientConfigurationDialog extends Shell {
         fd_nicknameField.left = new FormAttachment(serverIP, 0, SWT.LEFT);
         fd_nicknameField.right = new FormAttachment(serverIP, 0, SWT.RIGHT);
         nicknameField.setLayoutData(fd_nicknameField);
+        
+        Label label_2 = new Label(this, SWT.NONE);
+        label_2.setText("\u5BC6\u94A5\u6587\u4EF6");
+        label_2.setAlignment(SWT.CENTER);
+        FormData fd_label_2 = new FormData();
+        fd_label_2.right = new FormAttachment(lblNewLabel, 0, SWT.RIGHT);
+        fd_label_2.left = new FormAttachment(lblNewLabel, 0, SWT.LEFT);
+        label_2.setLayoutData(fd_label_2);
+        
+        keyFile = new Text(this, SWT.BORDER);
+        fd_label_2.top = new FormAttachment(keyFile, 3, SWT.TOP);
+        FormData fd_keyFile = new FormData();
+        fd_keyFile.top = new FormAttachment(nicknameField, 23);
+        fd_keyFile.right = new FormAttachment(cancel, 0, SWT.RIGHT);
+        fd_keyFile.left = new FormAttachment(serverIP, 0, SWT.LEFT);
+        keyFile.setLayoutData(fd_keyFile);
+        
+        Button generateKey = new Button(this, SWT.NONE);
+        generateKey.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                KeyGenerationDialog.showDialog();
+            }
+        });
+        FormData fd_generateKey = new FormData();
+        fd_generateKey.left = new FormAttachment(keyFile, 6);
+        fd_generateKey.top = new FormAttachment(label_2, -5, SWT.TOP);
+        generateKey.setLayoutData(fd_generateKey);
+        generateKey.setText("\u751F\u6210");
+        
+        Button browseKey = new Button(this, SWT.NONE);
+        fd_generateKey.right = new FormAttachment(100, -88);
+        FormData fd_browseKey = new FormData();
+        fd_browseKey.left = new FormAttachment(generateKey, 6);
+        fd_browseKey.top = new FormAttachment(label_2, -5, SWT.TOP);
+        fd_browseKey.right = new FormAttachment(100, -10);
+        browseKey.setLayoutData(fd_browseKey);
+        browseKey.setText("\u6D4F\u89C8...");
         createContents();
     }
 
@@ -185,12 +226,11 @@ public class ClientConfigurationDialog extends Shell {
      */
     protected void createContents() {
         setText("Client Configuration");
-        setSize(642, 301);
+        setSize(642, 367);
     }
 
     @Override
     protected void checkSubclass() {
         // Disable the check that prevents subclassing of SWT components
     }
-
 }

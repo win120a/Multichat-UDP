@@ -167,7 +167,7 @@ public class WebSocketHandler implements WebSocketListener {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
+        
         // broadcastMessage(uuid);
     }
 

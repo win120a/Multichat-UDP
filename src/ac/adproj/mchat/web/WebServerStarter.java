@@ -17,6 +17,13 @@
 
 package ac.adproj.mchat.web;
 
+import java.io.IOException;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -64,6 +71,7 @@ public class WebServerStarter implements AutoCloseable {
             webapp.setContextPath("/acmcs");
             webapp.setWar(WebClientLoader.getWebappWarPath());
             webapp.addServlet(new ServletHolder(new WebSocketHandlerFacade()), "/wshandler");
+            webapp.addEventListener(new SessionMonitor());
             
             server.setHandler(webapp);
 

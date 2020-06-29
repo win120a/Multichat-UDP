@@ -68,9 +68,9 @@ public class ServerListener implements Listener {
     private UserNameQueryService userNameQueryService;
 
     private int threadNumber = 0;
-    
+
     private static ServerListener instance;
-    
+
     /**
      * 获得此类的唯一实例。
      * 
@@ -104,26 +104,27 @@ public class ServerListener implements Listener {
      */
     private void readMessage(ByteBuffer bb, Handler handler, Integer result, SocketAddress address) {
 
-        if (result != -1) {
-
-            bb.flip();
-
-            StringBuffer sbuffer = new StringBuffer();
-
-            while (bb.hasRemaining()) {
-                sbuffer.append(StandardCharsets.UTF_8.decode(bb));
-            }
-
-            String message = handler.handleMessage(sbuffer.toString(), address);
-
-            try {
-                MessageDistributor.getInstance().sendUiMessage(message);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            bb.clear();
+        if (result == -1) {
+            return;
         }
+
+        bb.flip();
+
+        StringBuilder sbuffer = new StringBuilder();
+
+        while (bb.hasRemaining()) {
+            sbuffer.append(StandardCharsets.UTF_8.decode(bb));
+        }
+
+        String message = handler.handleMessage(sbuffer.toString(), address);
+
+        try {
+            MessageDistributor.getInstance().sendUiMessage(message);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        bb.clear();
     }
 
     /**
@@ -222,7 +223,7 @@ public class ServerListener implements Listener {
                     e1.printStackTrace();
                 }
             }
-            
+
             for (User u : userManager.userProfileValueSet()) {
                 try {
                     bb.rewind();
@@ -276,7 +277,7 @@ public class ServerListener implements Listener {
                 // Ignore
             }
         });
-        
+
         userManager.clearAllProfiles();
     }
 
@@ -289,7 +290,7 @@ public class ServerListener implements Listener {
         threadPool.shutdownNow();
         userManager.clearAllProfiles();
         serverDatagramChannel.close();
-        
+
         CommonThreadPool.shutdown();
     }
 }

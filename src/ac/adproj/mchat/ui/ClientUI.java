@@ -34,12 +34,12 @@ import ac.adproj.mchat.listener.ClientListener;
 public class ClientUI extends BaseChattingUI {
     private ClientListener listener;
     
-    public void initListener(byte[] ipAddress, int port, String userName) throws IOException {
+    public void initListener(byte[] ipAddress, int port, String userName, String keyFile) throws IOException {
         if (!ClientListener.checkNameDuplicates(ipAddress, userName)) {
-            listener = new ClientListener(this, (message) -> appendMessageDisplay(message), ipAddress, port, userName);
+            listener = new ClientListener(this, (message) -> appendMessageDisplay(message), ipAddress, port, userName, keyFile);
         } else {
             errorDialog("用户名重复了！");
-            initListener(ipAddress, port, getUserName());
+            initListener(ipAddress, port, getUserName(), keyFile);
         }
     }
 
@@ -87,7 +87,7 @@ public class ClientUI extends BaseChattingUI {
             System.exit(-1);
         }
         
-        ui.initListener(cfd.ip, cfd.port, cfd.nickname);
+        ui.initListener(cfd.ip, cfd.port, cfd.nickname, cfd.keyFile);
 
         Display d = ui.getDisplay();
         
