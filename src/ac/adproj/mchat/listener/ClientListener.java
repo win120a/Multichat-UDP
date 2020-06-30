@@ -23,10 +23,15 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import ac.adproj.mchat.crypto.AESCryptoServiceImpl;
+import ac.adproj.mchat.crypto.SymmetricCryptoService;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -104,7 +109,7 @@ public class ClientListener implements Listener {
         bb.put((Protocol.CHECK_DUPLICATE_REQUEST_HEADER + name).getBytes(StandardCharsets.UTF_8));
         bb.flip();
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         try {
 
@@ -181,7 +186,7 @@ public class ClientListener implements Listener {
                     if (result != -1) {
                         buffer.flip();
 
-                        StringBuffer sbuffer = new StringBuffer();
+                        StringBuilder sbuffer = new StringBuilder();
 
                         while (buffer.hasRemaining()) {
                             sbuffer.append(StandardCharsets.UTF_8.decode(buffer));
@@ -208,7 +213,7 @@ public class ClientListener implements Listener {
                         return;
                     }
                     
-                    if (exc.getClass() == InterruptedException.class) {
+                    if (exc.getClass().getName().contains("InterruptedException")) {
                         break;
                     }
 
@@ -253,6 +258,23 @@ public class ClientListener implements Listener {
         if (message.equals(Protocol.DEBUG_MODE_STRING)) {
             sendCommunicationData(Protocol.DEBUG_MODE_STRING, uuid);
             return;
+        }
+
+        byte[] ivBytes = new byte[16];
+
+        // IV length = 16
+        for (int i = 0; i < 16; i++) {
+            byte val = (byte) (uuid.charAt(i) * 31);
+            val += Math.pow(val, uuid.length() - 1);
+            ivBytes[i] = val;
+        }
+
+        SymmetricCryptoService scs = new AESCryptoServiceImpl(key, ivBytes);
+
+        try {
+            message = scs.encryptMessageToBase64String(message);
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
         }
 
         sendMessage(message, uuid);

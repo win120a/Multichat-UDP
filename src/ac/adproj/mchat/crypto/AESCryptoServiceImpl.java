@@ -84,7 +84,7 @@ public class AESCryptoServiceImpl implements SymmetricCryptoService {
     }
 
     @Override
-    public String decryptMessageFromBase64String(String base64Message) throws InvalidKeyException {
+    public String decryptMessageFromBase64String(String base64Message) throws InvalidKeyException, BadPaddingException {
         Cipher c1 = initCipher();
 
         try {
@@ -97,7 +97,7 @@ public class AESCryptoServiceImpl implements SymmetricCryptoService {
         try {
             return StandardCharsets.UTF_8.decode(
                     ByteBuffer.wrap(c1.doFinal(Base64.getDecoder().decode(base64Message)))).toString();
-        } catch (IllegalBlockSizeException | BadPaddingException ignored) {
+        } catch (IllegalBlockSizeException ignored) {
             // Shouldn't happen.
             throw new AssertionError(ignored);
         }

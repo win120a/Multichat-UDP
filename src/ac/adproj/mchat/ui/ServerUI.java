@@ -17,15 +17,23 @@
 
 package ac.adproj.mchat.ui;
 
-import java.io.IOException;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
-
+import ac.adproj.mchat.crypto.key.AESKeyServiceImpl;
 import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.model.Protocol;
 import ac.adproj.mchat.service.MessageDistributor;
 import ac.adproj.mchat.web.WebServerStarter;
 import ac.adproj.mchat.web.WebSocketHandler;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.security.Key;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 
 /**
  * 服务器端界面。
@@ -35,12 +43,16 @@ import ac.adproj.mchat.web.WebSocketHandler;
 public class ServerUI extends BaseChattingUI {
     private ServerListener listener;
 
-    private void initListener() throws IOException {
-        MessageDistributor.getInstance().registerSubscriber((message) -> {
+    private static final Logger LOG = LoggerFactory.getLogger(ServerUI.class);
+
+    private void initListener(Key key) throws IOException {
+        MessageDistributor.getInstance().registerSubscriber(message -> {
             this.getDisplay().asyncExec(() -> appendMessageDisplay(message));
         });
         
         listener = ServerListener.getInstance();
+
+        listener.setKey(key);
     }
 
     @Override
@@ -63,18 +75,29 @@ public class ServerUI extends BaseChattingUI {
         try {
             listener.logoffAll();
         } catch (IOException e) {
-            e.printStackTrace();
-            MessageDialog.openError(ServerUI.this, "出错", "注销失败：" + e.getMessage());
+            LOG.error("Failed to send logoff message", e);
         }
     }
 
     public static void main(String[] args) throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+        String date = sdf.format(new Date());
+
+        Handler fh = new FileHandler("%t/" + String.format("ACMCS_UDP_%s.log", date));
+        java.util.logging.Logger.getLogger("").addHandler(fh);
+
         ServerUI ui = new ServerUI();
 
         ui.setText(ui.getText() + " - S");
         ui.logoff.setText("注销全部客户端");
 
-        ui.initListener();
+        ServerConfigurationDialog.StatusWrapper cfd = ServerConfigurationDialog.showDialog();
+        
+        if (cfd == null) {
+            System.exit(-1);
+        }
+        
+        ui.initListener(new AESKeyServiceImpl().readKeyFromFile(cfd.getKeyFile()));
         
         Display d = ui.getDisplay();
         

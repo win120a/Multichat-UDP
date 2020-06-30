@@ -17,24 +17,7 @@
 
 package ac.adproj.mchat.listener;
 
-import java.io.IOException;
-import java.lang.ref.SoftReference;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.ClosedByInterruptException;
-import java.nio.channels.DatagramChannel;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
+import ac.adproj.mchat.crypto.AESCryptoServiceImpl;
 import ac.adproj.mchat.handler.Handler;
 import ac.adproj.mchat.handler.MessageType;
 import ac.adproj.mchat.handler.ServerMessageHandler;
@@ -46,6 +29,25 @@ import ac.adproj.mchat.service.MessageDistributor;
 import ac.adproj.mchat.service.UserManager;
 import ac.adproj.mchat.service.UserNameQueryService;
 import ac.adproj.mchat.ui.CommonDialogs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.crypto.BadPaddingException;
+import java.io.IOException;
+import java.lang.ref.SoftReference;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.ClosedByInterruptException;
+import java.nio.channels.DatagramChannel;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * 聊天服务器 UDP 协议通信类。
@@ -66,10 +68,13 @@ public class ServerListener implements Listener {
     private ExecutorService threadPool;
     private UserManager userManager = UserManager.getInstance();
     private UserNameQueryService userNameQueryService;
+    private Key key;
 
     private int threadNumber = 0;
 
     private static ServerListener instance;
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServerListener.class);
 
     /**
      * 获得此类的唯一实例。
@@ -83,6 +88,12 @@ public class ServerListener implements Listener {
         }
 
         return instance;
+    }
+    
+    public void setKey(Key key) {
+        if (this.key == null) {
+            this.key = key;
+        }
     }
 
     /**
@@ -116,12 +127,45 @@ public class ServerListener implements Listener {
             sbuffer.append(StandardCharsets.UTF_8.decode(bb));
         }
 
-        String message = handler.handleMessage(sbuffer.toString(), address);
+        String rawMessage = sbuffer.toString();
+
+        if (key != null && MessageType.getMessageType(rawMessage) == MessageType.INCOMING_MESSAGE) {
+            Map<String, String> tokenizeResult = MessageType.INCOMING_MESSAGE.tokenize(rawMessage);
+            String uuid = tokenizeResult.get("uuid");
+            String encryptedText = tokenizeResult.get("messageText");
+
+            try {
+                byte[] ivBytes = new byte[16];
+
+                // IV length = 16
+                for (int i = 0; i < 16; i++) {
+                    byte val = (byte) (uuid.charAt(i) * 31);
+                    val += Math.pow(val, uuid.length() - 1);
+                    ivBytes[i] = val;
+                }
+                
+                // << MESSAGE >>> <<<< (UUID) >>>> << MESSAGE >> (messageContent)
+                
+                String decryptedMessage = new AESCryptoServiceImpl(key, ivBytes).decryptMessageFromBase64String(encryptedText);
+                rawMessage = Protocol.MESSAGE_HEADER_LEFT_HALF + uuid + Protocol.MESSAGE_HEADER_MIDDLE_HALF + Protocol.MESSAGE_HEADER_RIGHT_HALF
+                        + decryptedMessage;
+                
+            } catch (InvalidKeyException e) {
+                LOG.warn("Invalid Key! ");
+            } catch (BadPaddingException e) {
+                bb.clear();
+                LOG.warn(String.format("Incorrect Key: [UUID = %s]", uuid), e);
+                return;
+            }
+        }
+
+        String message = handler.handleMessage(rawMessage, address);
 
         try {
             MessageDistributor.getInstance().sendUiMessage(message);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
+            LOG.warn("Sending message, but the process was interrupted by other thread.", e);
         }
 
         bb.clear();
@@ -129,9 +173,7 @@ public class ServerListener implements Listener {
 
     /**
      * 业务逻辑初始化方法。
-     * 
-     * @param shell    服务器 UI 窗口
-     * @param uiAction 包装由服务器 UI 指定的行为，其在接受、处理完消息后执行。
+     *
      * @throws IOException 如果读写出错
      */
     private void init() throws IOException {
@@ -176,8 +218,6 @@ public class ServerListener implements Listener {
                         return;
                     }
 
-                    exc.printStackTrace();
-
                     SoftReference<User> sr = null;
 
                     for (User user : userManager.userProfileValueSet()) {
@@ -187,6 +227,8 @@ public class ServerListener implements Listener {
                     }
 
                     userManager.deleteUserProfile(sr.get().getUuid());
+
+                    LOG.warn(String.format("Got exception when receiving message. UUID: %s", sr.get().getUuid()), exc);
 
                     sr.clear();
                     sr = null;
@@ -219,8 +261,8 @@ public class ServerListener implements Listener {
                     // 同时更新 UI 和 WebSocket
                     MessageDistributor.getInstance().sendRawProtocolMessage(text);
                 } catch (InterruptedException e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
+                    LOG.warn("Sending message to other UI components, but the process was interrupted by other thread.", e1);
+                    Thread.currentThread().interrupt();
                 }
             }
 
@@ -232,15 +274,14 @@ public class ServerListener implements Listener {
                         serverDatagramChannel.send(bb, u.getAddress());
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    CommonDialogs.errorDialog("发送信息出错: " + e.getMessage());
+                    LOG.error("Error in sending message.", e);
                 }
             }
         } else {
             try {
                 serverDatagramChannel.send(bb, userManager.lookup(uuid).getAddress());
             } catch (IOException e) {
-                e.printStackTrace();
+                LOG.error("Error in sending message.", e);
             }
         }
     }

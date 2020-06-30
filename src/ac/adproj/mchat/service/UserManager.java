@@ -164,8 +164,11 @@ public class UserManager implements Iterable<User> {
      * @return 是否注册成功。
      */
     public boolean reserveName(String name) {
-        if (!names.contains(name) && !names.contains(name)) {
-            return names.add(name) & reservedNames.add(name);
+        if (!names.contains(name) && !reservedNames.contains(name)) {
+            boolean fName = names.add(name);
+            boolean rName = reservedNames.add(name);
+
+            return fName && rName;
         }
         
         return false;
@@ -178,7 +181,8 @@ public class UserManager implements Iterable<User> {
      */
     public boolean undoReserveName(String name) {
         if (reservedNames.contains(name) && names.contains(name)) {
-            return reservedNames.remove(name) & names.remove(name);
+            boolean rName = reservedNames.remove(name);
+            return names.remove(name) && rName;
         }
         
         return false;

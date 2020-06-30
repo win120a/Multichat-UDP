@@ -36,7 +36,7 @@ public class ClientUI extends BaseChattingUI {
     
     public void initListener(byte[] ipAddress, int port, String userName, String keyFile) throws IOException {
         if (!ClientListener.checkNameDuplicates(ipAddress, userName)) {
-            listener = new ClientListener(this, (message) -> appendMessageDisplay(message), ipAddress, port, userName, keyFile);
+            listener = new ClientListener(this, this::appendMessageDisplay, ipAddress, port, userName, keyFile);
         } else {
             errorDialog("用户名重复了！");
             initListener(ipAddress, port, getUserName(), keyFile);
@@ -101,7 +101,7 @@ public class ClientUI extends BaseChattingUI {
         
         try {
             ui.listener.close();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
             // ignore
         }
     }

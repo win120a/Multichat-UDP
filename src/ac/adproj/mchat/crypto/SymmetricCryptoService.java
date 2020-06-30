@@ -1,5 +1,6 @@
 package ac.adproj.mchat.crypto;
 
+import javax.crypto.BadPaddingException;
 import java.security.InvalidKeyException;
 
 /**
@@ -24,5 +25,5 @@ public interface SymmetricCryptoService {
      * @return Decrypted Message.
      * @throws InvalidKeyException If the key belong to the service is invalid.
      */
-    String decryptMessageFromBase64String(String base64Message) throws InvalidKeyException;
+    String decryptMessageFromBase64String(String base64Message) throws InvalidKeyException, BadPaddingException;
 }

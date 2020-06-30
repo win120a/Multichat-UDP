@@ -23,6 +23,7 @@ import ac.adproj.mchat.crypto.key.SymmetricKeyService;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javax.crypto.BadPaddingException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -42,7 +43,7 @@ public class CryptoServiceTest {
     }
 
     @Test
-    public void testEncrypt() throws InvalidKeyException, IOException {
+    public void testEncrypt() throws InvalidKeyException, IOException, BadPaddingException {
         var cs = new AESCryptoServiceImpl(key, iv);
 
         String cryptoText = cs.encryptMessageToBase64String(MESSAGE);

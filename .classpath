@@ -25,5 +25,7 @@
 	<classpathentry kind="lib" path="C:/DevKits/eclipse/plugins/org.eclipse.ui.forms_3.9.0.v20200213-1442.jar" sourcepath="C:/DevKits/eclipse/plugins/org.eclipse.ui.forms_3.9.0.v20200213-1442.jar"/>
 	<classpathentry kind="lib" path="C:/DevKits/Libraries/jetty-all-9.4.28.v20200408-uber.jar" sourcepath="C:/DevKits/Libraries/jetty-src.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/junit4"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/slf4j"/>
+	<classpathentry kind="lib" path="C:/DevKits/Libraries/slf4j-jul/slf4j-jdk14-1.7.30.jar" sourcepath="C:/DevKits/Libraries/slf4j-jul/slf4j-jdk14-1.7.30-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
