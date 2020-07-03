@@ -34,6 +34,8 @@ public class CryptoServiceTest {
     private static Key key;
     private static SymmetricKeyService ks;
     private static final byte[] iv = new byte[] {-97, 22, 51, 32, -88, 107, -112, -13, -59, 123, -5, 84, -87, 61, -109, -76};
+    // A corrupted iv.
+    private static final byte[] CORRUPTED_IV = new byte[] {-96, 22, 51, 32, -88, 107, -112, -13, -59, 123, -5, 84, -87, 61, -109, -76};
     private static final String MESSAGE = "11111111111";
 
     @BeforeClass

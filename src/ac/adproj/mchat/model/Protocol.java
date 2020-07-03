@@ -112,7 +112,20 @@ public interface Protocol {
      * 用户名查询服务响应 - 用户名没有占用
      */
     String USER_NAME_NOT_EXIST = "<<< Clear >>>";
-    
+
+    /**
+     * WebSocket 客户端注册请求头 - 左半
+     */
     String WEBSOCKET_UUID_HEADER = "<WS><<";
+
+    /**
+     * WebSocket 客户端注册请求头 - 右半
+     */
     String WEBSOCKET_UUID_TAIL = ">>";
+
+    // << IK >> (UUID)
+    /**
+     * 服务器通知客户端密钥出错的信号字
+     */
+    String INVALID_KEY_NOTIFYING_STRING_HEADER = "<< INVALID_KEY >> ";
 }

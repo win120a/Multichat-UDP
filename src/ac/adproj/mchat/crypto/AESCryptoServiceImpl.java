@@ -27,10 +27,21 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Base64;
 
+/**
+ * The AES implementation of SymmetricCryptoService.
+ *
+ * @author Andy Cheung
+ * @implNote This implementation uses CFB mode, and PKCS #5 Padding.
+ */
 public class AESCryptoServiceImpl implements SymmetricCryptoService {
     private final Key key;
     private final IvParameterSpec ips;
 
+    /**
+     * Initializes this object with specified key and a random initial vector.
+     *
+     * @param key The secret key.
+     */
     public AESCryptoServiceImpl(Key key) {
         this.key = key;
 
@@ -41,6 +52,12 @@ public class AESCryptoServiceImpl implements SymmetricCryptoService {
         this.ips = new IvParameterSpec(iv);
     }
 
+    /**
+     * Initializes this object with specified key and a specialized initial vector.
+     *
+     * @param key The secret key.
+     * @param iv The initial vector.
+     */
     public AESCryptoServiceImpl(Key key, byte[] iv) {
         if (iv.length != 16) {
             throw new IllegalArgumentException("IV length should be 16.");
@@ -50,6 +67,11 @@ public class AESCryptoServiceImpl implements SymmetricCryptoService {
         this.ips = new IvParameterSpec(iv);
     }
 
+    /**
+     * Shortcut of Cipher.getInstance("AES/CFB/PKCS5Padding").
+     *
+     * @return The Cipher object.
+     */
     private Cipher initCipher() {
         try {
             return Cipher.getInstance("AES/CFB/PKCS5Padding");
@@ -90,7 +112,7 @@ public class AESCryptoServiceImpl implements SymmetricCryptoService {
         try {
             c1.init(Cipher.DECRYPT_MODE, key, ips);
         } catch (InvalidAlgorithmParameterException ignored) {
-            // Shouldn't happen.
+            // Shouldn't happen, since the IV value is checked by constructor.
             throw new AssertionError(ignored);
         }
 
@@ -101,5 +123,9 @@ public class AESCryptoServiceImpl implements SymmetricCryptoService {
             // Shouldn't happen.
             throw new AssertionError(ignored);
         }
+    }
+
+    public byte[] getIV() {
+        return ips.getIV();
     }
 }

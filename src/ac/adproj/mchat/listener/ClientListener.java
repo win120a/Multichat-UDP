@@ -17,6 +17,20 @@
 
 package ac.adproj.mchat.listener;
 
+import ac.adproj.mchat.crypto.AESCryptoServiceImpl;
+import ac.adproj.mchat.crypto.ParamUtil;
+import ac.adproj.mchat.crypto.SymmetricCryptoService;
+import ac.adproj.mchat.crypto.key.AESKeyServiceImpl;
+import ac.adproj.mchat.handler.ClientMessageHandler;
+import ac.adproj.mchat.model.Listener;
+import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.service.CommonThreadPool;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -25,22 +39,8 @@ import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.MessageDigest;
-import java.util.ArrayList;
 import java.util.UUID;
 import java.util.function.Consumer;
-
-import ac.adproj.mchat.crypto.AESCryptoServiceImpl;
-import ac.adproj.mchat.crypto.SymmetricCryptoService;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
-
-import ac.adproj.mchat.crypto.key.AESKeyServiceImpl;
-import ac.adproj.mchat.handler.ClientMessageHandler;
-import ac.adproj.mchat.model.Listener;
-import ac.adproj.mchat.model.Protocol;
-import ac.adproj.mchat.service.CommonThreadPool;
 
 /**
  * 客户端监听器。
@@ -52,6 +52,8 @@ public class ClientListener implements Listener {
     private String uuid;
     private String name;
     private Key key;
+
+    private static final Logger LOG = LoggerFactory.getLogger(ClientListener.class);
 
     /**
      * 构造客户端监听器类。
@@ -65,7 +67,7 @@ public class ClientListener implements Listener {
     public ClientListener(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username, String keyFile)
             throws IOException {
         this.name = username;
-        this.key = new AESKeyServiceImpl().readKeyFromFile(keyFile);
+        this.key = keyFile.isEmpty() ? null : new AESKeyServiceImpl().readKeyFromFile(keyFile);
         
         init(shell, uiActions, address, port, username);
     }
@@ -133,8 +135,8 @@ public class ClientListener implements Listener {
                 return true;
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+            LOG.error("User Query Service Failed.", e);
+            throw e;
         } finally {
             dc.close();
         }
@@ -149,12 +151,21 @@ public class ClientListener implements Listener {
      * @param username  用户名
      */
     private void initNioSocketConnection(Shell shell, Consumer<String> uiActions, InetAddress ia, String username) {
-        ClientMessageHandler handler = new ClientMessageHandler((v) -> {
-            try {
-                onForceLogoff();
-            } catch (IOException e) {
-                e.printStackTrace();
-                shell.getDisplay().syncExec(() -> MessageDialog.openError(shell, "出错", "下线出错：" + e.getMessage()));
+        ClientMessageHandler handler = new ClientMessageHandler(force -> {
+            if (Boolean.TRUE.equals(force)) {
+                try {
+                    onForceLogoff();
+                } catch (IOException e) {
+                    LOG.error("Logoff failed.", e);
+                    shell.getDisplay().syncExec(() -> MessageDialog.openError(shell, "出错", "下线出错：" + e.getMessage()));
+                }
+            } else {
+                try {
+                    close();
+                } catch (Exception e) {
+                    LOG.error("Logoff failed.", e);
+                    shell.getDisplay().syncExec(() -> MessageDialog.openError(shell, "出错", "下线出错：" + e.getMessage()));
+                }
             }
         });
 
@@ -166,7 +177,7 @@ public class ClientListener implements Listener {
 
             socketChannel.write(greetBuffer);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("Failed to connect.", e);
         }
 
         shell.getDisplay().syncExec(() -> {
@@ -197,10 +208,10 @@ public class ClientListener implements Listener {
                                 uiActions.accept(
                                         handler.handleMessage(sbuffer.toString(), socketChannel.getRemoteAddress()));
                             } catch (IOException exc) {
-                                exc.printStackTrace();
+                                LOG.error("Failed to get remote address.", exc);
 
                                 display.syncExec(() -> {
-                                    MessageDialog.openError(shell, "出错", "客户机读取出错：" + exc.getMessage());
+                                    MessageDialog.openError(shell, "出错", "读取服务器地址出错：" + exc.getMessage());
                                 });
                             }
                         });
@@ -217,7 +228,7 @@ public class ClientListener implements Listener {
                         break;
                     }
 
-                    exc.printStackTrace();
+                    LOG.error("Failed to read message from server.", exc);
 
                     display.syncExec(() -> MessageDialog.openError(shell, "出错", "客户机读取出错：" + exc.getMessage()));
                 }
@@ -245,7 +256,7 @@ public class ClientListener implements Listener {
         try {
             socketChannel.write(bb);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("Failed to send message to server.", e);
         }
     }
 
@@ -260,21 +271,15 @@ public class ClientListener implements Listener {
             return;
         }
 
-        byte[] ivBytes = new byte[16];
-
         // IV length = 16
-        for (int i = 0; i < 16; i++) {
-            byte val = (byte) (uuid.charAt(i) * 31);
-            val += Math.pow(val, uuid.length() - 1);
-            ivBytes[i] = val;
-        }
+        byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
 
         SymmetricCryptoService scs = new AESCryptoServiceImpl(key, ivBytes);
 
         try {
             message = scs.encryptMessageToBase64String(message);
         } catch (InvalidKeyException e) {
-            e.printStackTrace();
+            LOG.error("Invalid key!", e);
         }
 
         sendMessage(message, uuid);

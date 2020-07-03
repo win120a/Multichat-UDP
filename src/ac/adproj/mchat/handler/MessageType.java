@@ -53,7 +53,12 @@ public enum MessageType {
     /**
      * 用户名查重请求消息
      */
-    USERNAME_QUERY_REQUEST, 
+    USERNAME_QUERY_REQUEST,
+
+    /**
+     * 用于向客户端通知非法密钥的信号字
+     */
+    INVALID_KEY,
     
     /**
      * 未知
@@ -77,6 +82,8 @@ public enum MessageType {
             return INCOMING_MESSAGE;
         } else if (message.startsWith(Protocol.CHECK_DUPLICATE_REQUEST_HEADER)) {
             return USERNAME_QUERY_REQUEST;
+        } else if (message.startsWith(Protocol.INVALID_KEY_NOTIFYING_STRING_HEADER)) {
+            return INVALID_KEY;
         }
         return MessageType.UNKNOWN;
     }

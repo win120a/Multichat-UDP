@@ -15,24 +15,20 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package ac.adproj.mchat.crypto.key;
+package ac.adproj.mchat.crypto;
 
-import javax.crypto.KeyGenerator;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
+public final class ParamUtil {
+    private ParamUtil() { throw new UnsupportedOperationException("No instance! "); }
 
-public class AESKeyServiceImpl extends AbstractSymmetricKeyService {
-    @Override
-    public Key generateKey() {
-        try {
-            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-            keyGen.init(128);
+    public static byte[] getIVFromString(String str, int length) {
+        byte[] ivBytes = new byte[length];
 
-            return keyGen.generateKey();
-        } catch (NoSuchAlgorithmException ignore) {
-            // Shouldn't happen.
-            throw new AssertionError("No such algorithm for AES! ");
+        for (int i = 0; i < length; i++) {
+            byte val = (byte) (str.charAt(i) * 31);
+            val += Math.pow(val, str.length() - 1);
+            ivBytes[i] = val;
         }
 
+        return ivBytes;
     }
 }

@@ -18,6 +18,7 @@
 package ac.adproj.mchat.listener;
 
 import ac.adproj.mchat.crypto.AESCryptoServiceImpl;
+import ac.adproj.mchat.crypto.ParamUtil;
 import ac.adproj.mchat.handler.Handler;
 import ac.adproj.mchat.handler.MessageType;
 import ac.adproj.mchat.handler.ServerMessageHandler;
@@ -28,7 +29,6 @@ import ac.adproj.mchat.service.CommonThreadPool;
 import ac.adproj.mchat.service.MessageDistributor;
 import ac.adproj.mchat.service.UserManager;
 import ac.adproj.mchat.service.UserNameQueryService;
-import ac.adproj.mchat.ui.CommonDialogs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,14 +135,7 @@ public class ServerListener implements Listener {
             String encryptedText = tokenizeResult.get("messageText");
 
             try {
-                byte[] ivBytes = new byte[16];
-
-                // IV length = 16
-                for (int i = 0; i < 16; i++) {
-                    byte val = (byte) (uuid.charAt(i) * 31);
-                    val += Math.pow(val, uuid.length() - 1);
-                    ivBytes[i] = val;
-                }
+                byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
                 
                 // << MESSAGE >>> <<<< (UUID) >>>> << MESSAGE >> (messageContent)
                 
@@ -152,9 +145,11 @@ public class ServerListener implements Listener {
                 
             } catch (InvalidKeyException e) {
                 LOG.warn("Invalid Key! ");
+                sendCommunicationData(Protocol.INVALID_KEY_NOTIFYING_STRING_HEADER + uuid, uuid);
             } catch (BadPaddingException e) {
                 bb.clear();
                 LOG.warn(String.format("Incorrect Key: [UUID = %s]", uuid), e);
+                sendCommunicationData(Protocol.INVALID_KEY_NOTIFYING_STRING_HEADER + uuid, uuid);
                 return;
             }
         }
