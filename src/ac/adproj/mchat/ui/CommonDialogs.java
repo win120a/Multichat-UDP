@@ -30,6 +30,8 @@ import org.eclipse.jface.dialogs.MessageDialog;
  */
 public final class CommonDialogs {
 
+    private CommonDialogs() { throw new UnsupportedOperationException("No instance for you! "); }
+
     /**
      * 显示输入框。
      * 
@@ -50,7 +52,7 @@ public final class CommonDialogs {
      * @return 用户输入
      */
     public static String inputDialog(String defaultString, String askMessage, String errorMessage) {
-        return inputDialog(defaultString, askMessage, errorMessage, (a) -> true);
+        return inputDialog(defaultString, askMessage, errorMessage, a -> true);
     }
 
     /**

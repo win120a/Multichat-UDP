@@ -20,7 +20,7 @@ package ac.adproj.mchat.handler;
 import java.net.SocketAddress;
 import java.util.function.Consumer;
 
-import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.ui.CommonDialogs;
 
 import static ac.adproj.mchat.handler.MessageType.*;
@@ -43,9 +43,9 @@ public class ClientMessageHandler implements Handler {
 
         switch (getMessageType(message)) {
             case INCOMING_MESSAGE:
-                message = message.replace(Protocol.MESSAGE_HEADER_LEFT_HALF, "")
-                        .replace(Protocol.MESSAGE_HEADER_RIGHT_HALF, "")
-                        .replace(Protocol.MESSAGE_HEADER_MIDDLE_HALF, ": ");
+                message = message.replace(ProtocolStrings.MESSAGE_HEADER_LEFT_HALF, "")
+                        .replace(ProtocolStrings.MESSAGE_HEADER_RIGHT_HALF, "")
+                        .replace(ProtocolStrings.MESSAGE_HEADER_MIDDLE_HALF, ": ");
                 break;
 
             case REGISTER:

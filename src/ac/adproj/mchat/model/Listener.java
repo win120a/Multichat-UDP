@@ -22,10 +22,10 @@ package ac.adproj.mchat.model;
  * 
  * @author Andy Cheung
  * @since 2020/4/26
- * @see Protocol
+ * @see ProtocolStrings
  * @see AutoCloseable
  */
-public interface Listener extends Protocol, AutoCloseable {
+public interface Listener extends AutoCloseable {
     /**
      * 向指定端发送信息。
      * 

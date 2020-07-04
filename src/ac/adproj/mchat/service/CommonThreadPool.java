@@ -14,6 +14,9 @@ import java.util.concurrent.TimeUnit;
  * @since 2020/5/24
  */
 public class CommonThreadPool {
+
+    private CommonThreadPool() { throw new UnsupportedOperationException("No instance for you! "); }
+
     private static int threadNumber = 0;
 
     private static BlockingQueue<Runnable> bq = new LinkedBlockingQueue<>(16);
@@ -42,7 +45,7 @@ public class CommonThreadPool {
      * 
      * @param r 线程执行体
      */
-    public synchronized static void execute(Runnable r) {
+    public static synchronized void execute(Runnable r) {
         threadPool.execute(r);
     }
     
@@ -52,7 +55,7 @@ public class CommonThreadPool {
      * @param r 线程执行体
      * @param stmt 说明文字
      */
-    public synchronized static void execute(Runnable r, String stmt) {
+    public static synchronized void execute(Runnable r, String stmt) {
         synchronized (mutex) {
             comment = stmt;
         }

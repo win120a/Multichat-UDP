@@ -23,7 +23,7 @@ import java.net.SocketAddress;
 import java.util.Map;
 
 import ac.adproj.mchat.listener.ServerListener;
-import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.model.User;
 import ac.adproj.mchat.service.UserManager;
 
@@ -72,7 +72,7 @@ public class ServerMessageHandler implements Handler {
                     e.printStackTrace();
                 }
 
-                return "Client: " + message.replace(Protocol.NOTIFY_LOGOFF_HEADER, "") + " Disconnected.";
+                return "Client: " + message.replace(ProtocolStrings.NOTIFY_LOGOFF_HEADER, "") + " Disconnected.";
 
             case INCOMING_MESSAGE:
                 // 收到消息

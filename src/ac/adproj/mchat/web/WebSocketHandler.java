@@ -31,10 +31,12 @@ import org.eclipse.jetty.websocket.api.WebSocketListener;
 
 import ac.adproj.mchat.handler.MessageType;
 import ac.adproj.mchat.listener.ServerListener;
-import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.service.MessageDistributor;
 import ac.adproj.mchat.service.UserManager;
 import ac.adproj.mchat.service.MessageDistributor.SubscriberCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static ac.adproj.mchat.handler.MessageType.*;
 
@@ -50,6 +52,8 @@ public class WebSocketHandler implements WebSocketListener {
     private String nickname;
 
     private static Set<WebSocketHandler> connections;
+
+    private static final Logger LOG = LoggerFactory.getLogger(WebSocketHandler.class);
     
     public static boolean isConnected() {
         return !connections.isEmpty();
@@ -61,12 +65,13 @@ public class WebSocketHandler implements WebSocketListener {
         MessageDistributor.getInstance().registerSubscriber(new WebSocketBridge());
     }
 
-    {
+    public WebSocketHandler() {
         uuid = UUID.randomUUID().toString();
     }
 
     
     public static class WebSocketBridge implements SubscriberCallback {
+        private static final Logger WS_BRIDGE_LOG = LoggerFactory.getLogger(WebSocketBridge.class);
         @Override
         public void onMessageReceived(String uiMessage) {
             String name = uiMessage.split("\\s*:\\s*")[0];
@@ -79,8 +84,7 @@ public class WebSocketHandler implements WebSocketListener {
                 try {
                     conn.session.getRemote().sendString(uiMessage);
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    WS_BRIDGE_LOG.error(String.format("Bridge - Send Message failed. [To UUID = %s]", conn.uuid), e);
                 }
             }
         }
@@ -103,7 +107,7 @@ public class WebSocketHandler implements WebSocketListener {
 
     @Override
     public void onWebSocketError(Throwable cause) {
-        cause.printStackTrace(System.err);
+        LOG.error(String.format("WebSocket protocol error. [UUID=%s]", uuid), cause);
     }
 
     @Override
@@ -118,7 +122,9 @@ public class WebSocketHandler implements WebSocketListener {
                 try {
                     MessageDistributor.getInstance().sendRawProtocolMessage(protoMsg);
                 } catch (InterruptedException e1) {
-                    e1.printStackTrace();
+                    Thread.currentThread().interrupt();
+
+                    LOG.error(String.format("Error in sending message to Message Distributor. [UUID=%s]", uuid), e1);
                 }
                 
                 broadcastMessage(protoMsg);
@@ -140,11 +146,10 @@ public class WebSocketHandler implements WebSocketListener {
 
                 try {
                     session.getRemote()
-                            .sendString(UserManager.getInstance().containsName(name) ? Protocol.USER_NAME_DUPLICATED
-                                    : Protocol.USER_NAME_NOT_EXIST);
+                            .sendString(UserManager.getInstance().containsName(name) ? ProtocolStrings.USER_NAME_DUPLICATED
+                                    : ProtocolStrings.USER_NAME_NOT_EXIST);
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    LOG.error(String.format("User query protocol error. [UUID=%s]", uuid), e);
                 }
 
                 break;
@@ -162,13 +167,10 @@ public class WebSocketHandler implements WebSocketListener {
         connections.add(this);
 
         try {
-            session.getRemote().sendString(Protocol.WEBSOCKET_UUID_HEADER + uuid + Protocol.WEBSOCKET_UUID_TAIL);
+            session.getRemote().sendString(ProtocolStrings.WEBSOCKET_UUID_HEADER + uuid + ProtocolStrings.WEBSOCKET_UUID_TAIL);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error(String.format("WebSocket protocol error. [UUID=%s]", uuid), e);
         }
-        
-        // broadcastMessage(uuid);
     }
 
     private void broadcastMessage(String message) {
@@ -178,18 +180,16 @@ public class WebSocketHandler implements WebSocketListener {
                     try {
                         h.session.getRemote().sendString(message);
                     } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                        LOG.error(String.format("Send WebSocket message error. [UUID=%s]", uuid), e);
                     }
                 }
             }
         }
         
         try {
-            ServerListener.getInstance().sendCommunicationData(message, Protocol.BROADCAST_MESSAGE_UUID);
+            ServerListener.getInstance().sendCommunicationData(message, ProtocolStrings.BROADCAST_MESSAGE_UUID);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error(String.format("Send UDP message error. [UUID=%s]", uuid), e);
         }
     }
 

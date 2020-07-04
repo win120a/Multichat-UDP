@@ -17,21 +17,15 @@
 
 package ac.adproj.mchat.web;
 
-import java.io.IOException;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import ac.adproj.mchat.service.CommonThreadPool;
+import ac.adproj.mchat.web.res.WebClientLoader;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
-
-import ac.adproj.mchat.service.CommonThreadPool;
-import ac.adproj.mchat.web.res.WebClientLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * WebSocket 服务器和 WebSocket 客户端 （嵌入式 Jetty 服务器）的启动代码所在类。
@@ -42,6 +36,8 @@ import ac.adproj.mchat.web.res.WebClientLoader;
 public class WebServerStarter implements AutoCloseable {
     private Server server = null;
     private Thread serverThread;
+
+    private static final Logger LOG = LoggerFactory.getLogger(WebServerStarter.class);
 
     /**
      * WebSocket 服务的 (Servlet) 外观类，主要作用是包装 WebSocketHandler 类，供 Jetty 使用。
@@ -71,7 +67,6 @@ public class WebServerStarter implements AutoCloseable {
             webapp.setContextPath("/acmcs");
             webapp.setWar(WebClientLoader.getWebappWarPath());
             webapp.addServlet(new ServletHolder(new WebSocketHandlerFacade()), "/wshandler");
-            webapp.addEventListener(new SessionMonitor());
             
             server.setHandler(webapp);
 
@@ -79,17 +74,16 @@ public class WebServerStarter implements AutoCloseable {
                 server.start();
                 server.join();
             } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.error("Error when starting web server.", e);
             }
         }, "Jetty HTTP Server");
     }
     
     public static void main(String[] args) throws Exception {
-        WebServerStarter i = new WebServerStarter();
-        i.start(8090);
-        i.serverThread.join();
-        i.close();
+        try(WebServerStarter i = new WebServerStarter()) {
+            i.start(8090);
+            i.serverThread.join();
+        }
     }
 
     @Override

@@ -19,7 +19,7 @@ package ac.adproj.mchat.ui;
 
 import ac.adproj.mchat.crypto.key.AESKeyServiceImpl;
 import ac.adproj.mchat.listener.ServerListener;
-import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.service.MessageDistributor;
 import ac.adproj.mchat.web.WebServerStarter;
 import ac.adproj.mchat.web.WebSocketHandler;
@@ -62,7 +62,7 @@ public class ServerUI extends BaseChattingUI {
             return;
         }
         
-        listener.sendMessage(text, Protocol.BROADCAST_MESSAGE_UUID);
+        listener.sendMessage(text, ProtocolStrings.BROADCAST_MESSAGE_UUID);
     }
 
     @Override
@@ -83,7 +83,7 @@ public class ServerUI extends BaseChattingUI {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
         String date = sdf.format(new Date());
 
-        Handler fh = new FileHandler("%t/" + String.format("ACMCS_UDP_%s.log", date));
+        Handler fh = new FileHandler("%t/" + String.format("ACMCS_UDP_S_%s.log", date));
         java.util.logging.Logger.getLogger("").addHandler(fh);
 
         ServerUI ui = new ServerUI();

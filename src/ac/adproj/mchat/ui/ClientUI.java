@@ -21,10 +21,16 @@ import static ac.adproj.mchat.ui.CommonDialogs.errorDialog;
 import static ac.adproj.mchat.ui.CommonDialogs.inputDialog;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 
 import org.eclipse.swt.widgets.Display;
 
 import ac.adproj.mchat.listener.ClientListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 客户端界面。
@@ -33,6 +39,8 @@ import ac.adproj.mchat.listener.ClientListener;
  */
 public class ClientUI extends BaseChattingUI {
     private ClientListener listener;
+
+    private static final Logger LOG = LoggerFactory.getLogger(ClientUI.class);
     
     public void initListener(byte[] ipAddress, int port, String userName, String keyFile) throws IOException {
         if (!ClientListener.checkNameDuplicates(ipAddress, userName)) {
@@ -54,8 +62,8 @@ public class ClientUI extends BaseChattingUI {
         try {
             listener.logoff();
         } catch (IOException e) {
-            e.printStackTrace();
-            
+            LOG.error("Logoff failed.", e);
+
             getDisplay().syncExec(() -> {
                 CommonDialogs.errorDialog("注销异常：" + e.getMessage());
             });
@@ -76,7 +84,13 @@ public class ClientUI extends BaseChattingUI {
 
     public static void main(String[] args) throws IOException {
         ClientUI ui = new ClientUI();
-        
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+        String date = sdf.format(new Date());
+
+        Handler fh = new FileHandler("%t/" + String.format("ACMCS_UDP_C_%s.log", date));
+        java.util.logging.Logger.getLogger("").addHandler(fh);
+
         ui.setText(ui.getText() + " - C");
         
         ui.open();

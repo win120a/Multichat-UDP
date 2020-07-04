@@ -23,7 +23,7 @@ import ac.adproj.mchat.crypto.SymmetricCryptoService;
 import ac.adproj.mchat.crypto.key.AESKeyServiceImpl;
 import ac.adproj.mchat.handler.ClientMessageHandler;
 import ac.adproj.mchat.model.Listener;
-import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.service.CommonThreadPool;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
@@ -42,22 +42,23 @@ import java.security.Key;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import static ac.adproj.mchat.model.ProtocolStrings.*;
+
 /**
  * 客户端监听器。
- * 
+ *
  * @author Andy Cheung
  */
 public class ClientListener implements Listener {
+    private static final Logger LOG = LoggerFactory.getLogger(ClientListener.class);
     private DatagramChannel socketChannel;
     private String uuid;
-    private String name;
-    private Key key;
-
-    private static final Logger LOG = LoggerFactory.getLogger(ClientListener.class);
+    private final String name;
+    private final Key key;
 
     /**
      * 构造客户端监听器类。
-     * 
+     *
      * @param shell     服务器 UI 窗口
      * @param uiActions 包装由服务器 UI 指定的行为，其在接受、处理完消息后执行。
      * @param address   服务器地址
@@ -68,13 +69,53 @@ public class ClientListener implements Listener {
             throws IOException {
         this.name = username;
         this.key = keyFile.isEmpty() ? null : new AESKeyServiceImpl().readKeyFromFile(keyFile);
-        
+
         init(shell, uiActions, address, port, username);
     }
 
     /**
+     * 向服务器查询用户名是否重复。
+     *
+     * @param serverAddress 服务器地址
+     * @param name          待查用户名
+     * @return 是否重复
+     * @throws IOException 如果IO出现异常
+     */
+    public static boolean checkNameDuplicates(byte[] serverAddress, String name) throws IOException {
+        DatagramChannel dc = DatagramChannel.open();
+
+        ByteBuffer bb = ByteBuffer.allocate(BUFFER_SIZE);
+
+        bb.put((ProtocolStrings.CHECK_DUPLICATE_REQUEST_HEADER + name).getBytes(StandardCharsets.UTF_8));
+        bb.flip();
+
+        StringBuilder buffer = new StringBuilder();
+
+        try {
+
+            dc.configureBlocking(true);
+            dc.send(bb, new InetSocketAddress(InetAddress.getByAddress(serverAddress),
+                    ProtocolStrings.SERVER_CHECK_DUPLICATE_PORT));
+
+            bb.clear();
+
+            dc.receive(bb);
+
+            bb.flip();
+
+            while (bb.hasRemaining()) {
+                buffer.append(StandardCharsets.UTF_8.decode(bb));
+            }
+
+            return !buffer.toString().startsWith(ProtocolStrings.USER_NAME_NOT_EXIST);
+        } finally {
+            dc.close();
+        }
+    }
+
+    /**
      * 业务逻辑初始化方法。
-     * 
+     *
      * @param shell     服务器 UI 窗口
      * @param uiActions 包装由服务器 UI 指定的行为，其在接受、处理完消息后执行。
      * @param address   服务器地址
@@ -96,55 +137,8 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * 向服务器查询用户名是否重复。
-     * 
-     * @param serverAddress 服务器地址
-     * @param name          待查用户名
-     * @return 是否重复
-     * @throws IOException 如果IO出现异常
-     */
-    public static boolean checkNameDuplicates(byte[] serverAddress, String name) throws IOException {
-        DatagramChannel dc = DatagramChannel.open();
-
-        ByteBuffer bb = ByteBuffer.allocate(BUFFER_SIZE);
-
-        bb.put((Protocol.CHECK_DUPLICATE_REQUEST_HEADER + name).getBytes(StandardCharsets.UTF_8));
-        bb.flip();
-
-        StringBuilder buffer = new StringBuilder();
-
-        try {
-
-            dc.configureBlocking(true);
-            dc.send(bb, new InetSocketAddress(InetAddress.getByAddress(serverAddress),
-                    Protocol.SERVER_CHECK_DUPLICATE_PORT));
-
-            bb.clear();
-
-            dc.receive(bb);
-
-            bb.flip();
-
-            while (bb.hasRemaining()) {
-                buffer.append(StandardCharsets.UTF_8.decode(bb));
-            }
-
-            if (buffer.toString().startsWith(Protocol.USER_NAME_NOT_EXIST)) {
-                return false;
-            } else {
-                return true;
-            }
-        } catch (IOException e) {
-            LOG.error("User Query Service Failed.", e);
-            throw e;
-        } finally {
-            dc.close();
-        }
-    }
-
-    /**
      * 初始化 NIO UDP 连接。
-     * 
+     *
      * @param shell     客户端 UI 窗体
      * @param uiActions 由客户端指定的 UI 行为，在处理完消息后执行
      * @param ia        客户端地址
@@ -184,56 +178,59 @@ public class ClientListener implements Listener {
             uiActions.accept("Connected to Server, UserName: " + username + ", UUID: " + uuid);
         });
 
-        CommonThreadPool.execute(() -> {
+        CommonThreadPool.execute(() -> readMessage(shell, uiActions, handler));
+    }
 
-            while (socketChannel.isOpen()) {
-                final ByteBuffer buffer = ByteBuffer.allocate(Protocol.BUFFER_SIZE);
+    private void readMessage(Shell shell, Consumer<String> uiActions, ClientMessageHandler handler) {
+        while (socketChannel.isOpen()) {
+            final ByteBuffer buffer = ByteBuffer.allocate(ProtocolStrings.BUFFER_SIZE);
 
-                Display display = shell.getDisplay();
+            Display display = shell.getDisplay();
 
-                try {
-                    int result = socketChannel.read(buffer);
+            try {
+                int result = socketChannel.read(buffer);
 
-                    if (result != -1) {
-                        buffer.flip();
+                if (result == -1) {
+                    return;
+                }
 
-                        StringBuilder sbuffer = new StringBuilder();
+                buffer.flip();
 
-                        while (buffer.hasRemaining()) {
-                            sbuffer.append(StandardCharsets.UTF_8.decode(buffer));
-                        }
+                StringBuilder sbuffer = new StringBuilder();
+
+                while (buffer.hasRemaining()) {
+                    sbuffer.append(StandardCharsets.UTF_8.decode(buffer));
+                }
+
+                display.syncExec(() -> {
+                    try {
+                        uiActions.accept(
+                                handler.handleMessage(sbuffer.toString(), socketChannel.getRemoteAddress()));
+                    } catch (IOException exc) {
+                        LOG.error("Failed to get remote address.", exc);
 
                         display.syncExec(() -> {
-                            try {
-                                uiActions.accept(
-                                        handler.handleMessage(sbuffer.toString(), socketChannel.getRemoteAddress()));
-                            } catch (IOException exc) {
-                                LOG.error("Failed to get remote address.", exc);
-
-                                display.syncExec(() -> {
-                                    MessageDialog.openError(shell, "出错", "读取服务器地址出错：" + exc.getMessage());
-                                });
-                            }
+                            MessageDialog.openError(shell, "出错", "读取服务器地址出错：" + exc.getMessage());
                         });
-
-                        buffer.clear();
                     }
-                } catch (Exception exc) {
+                });
 
-                    if (exc.getClass().getName().contains("AsynchronousCloseException")) {
-                        return;
-                    }
-                    
-                    if (exc.getClass().getName().contains("InterruptedException")) {
-                        break;
-                    }
+                buffer.clear();
+            } catch (Exception exc) {
 
-                    LOG.error("Failed to read message from server.", exc);
-
-                    display.syncExec(() -> MessageDialog.openError(shell, "出错", "客户机读取出错：" + exc.getMessage()));
+                if (exc.getClass().getName().contains("AsynchronousCloseException")) {
+                    return;
                 }
+
+                if (exc.getClass().getName().contains("InterruptedException")) {
+                    break;
+                }
+
+                LOG.error("Failed to read message from server.", exc);
+
+                display.syncExec(() -> MessageDialog.openError(shell, "出错", "客户机读取出错：" + exc.getMessage()));
             }
-        });
+        }
     }
 
     public String getUuid() {
@@ -262,12 +259,12 @@ public class ClientListener implements Listener {
 
     /**
      * 发送聊天信息。
-     * 
+     *
      * @param message 消息内容
      */
     public void sendMessage(String message) {
-        if (message.equals(Protocol.DEBUG_MODE_STRING)) {
-            sendCommunicationData(Protocol.DEBUG_MODE_STRING, uuid);
+        if (message.equals(ProtocolStrings.DEBUG_MODE_STRING)) {
+            sendCommunicationData(ProtocolStrings.DEBUG_MODE_STRING, uuid);
             return;
         }
 
@@ -294,7 +291,7 @@ public class ClientListener implements Listener {
 
     /**
      * 向服务器申请注销。
-     * 
+     *
      * @throws IOException 出现IO错误
      */
     public void logoff() throws IOException {
@@ -307,7 +304,7 @@ public class ClientListener implements Listener {
 
     /**
      * 当服务器强行下线时的回调方法。
-     * 
+     *
      * @throws IOException 出现IO错误
      */
     private void onForceLogoff() throws IOException {
@@ -323,7 +320,7 @@ public class ClientListener implements Listener {
     @Override
     public void close() throws Exception {
         logoff();
-        
+
         CommonThreadPool.shutdown();
     }
 }

@@ -18,30 +18,36 @@
 package ac.adproj.mchat.model;
 
 /**
- * 协议字符串接口。
+ * 协议字符串常量类。
  *  
  * @author Andy Cheung
  */
-public interface Protocol {
+public final class ProtocolStrings {
+
+    // NO-OP Constructor.
+    private ProtocolStrings() {
+        throw new AssertionError("No 'ProtocolStrings' instance for you! ");
+    }
+
     /**
      * 聊天服务器端口。
      */
-    int SERVER_PORT = 10240;
+    public static final int SERVER_PORT = 10240;
     
     /**
      * 用户名查询服务端口。
      */
-    int SERVER_CHECK_DUPLICATE_PORT = 10241;
+    public static final int SERVER_CHECK_DUPLICATE_PORT = 10241;
     
     /**
      * 客户端的默认端口。
      */
-    int CLIENT_DEFAULT_PORT = 10242;
+    public static final int CLIENT_DEFAULT_PORT = 10242;
     
     /**
      * NIO 缓冲区大小。
      */
-    int BUFFER_SIZE = 1024;
+    public static final int BUFFER_SIZE = 1024;
     
     // << CONNECT >>(UUID)>>>>(Name)<< CONNECT >>
     
@@ -49,83 +55,83 @@ public interface Protocol {
      * 用户注册协议消息的左半部分。
      * 消息格式：&lt;&lt; CONNECT &gt;&gt;(UUID)&gt;&gt;&gt;&gt;(用户名)&lt;&lt; CONNECT &gt;&gt;
      */
-    String CONNECTING_GREET_LEFT_HALF = "<< CONNECT >>";
+    public static final String CONNECTING_GREET_LEFT_HALF = "<< CONNECT >>";
     
     /**
      * 用户注册协议消息的中间部分。
      * 消息格式：&lt;&lt; CONNECT &gt;&gt;(UUID)&gt;&gt;&gt;&gt;(用户名)&lt;&lt; CONNECT &gt;&gt;
      */
-    String CONNECTING_GREET_MIDDLE_HALF = ">>>>>";
+    public static final String CONNECTING_GREET_MIDDLE_HALF = ">>>>>";
     
     /**
      * 用户注册协议消息的右半部分。
      * 消息格式：&lt;&lt; CONNECT &gt;&gt;(UUID)&gt;&gt;&gt;&gt;(用户名)&lt;&lt; CONNECT &gt;&gt;
      */
-    String CONNECTING_GREET_RIGHT_HALF = "<< CONNECT >>";
+    public static final String CONNECTING_GREET_RIGHT_HALF = "<< CONNECT >>";
     
     /**
      * 客户端通知注销的请求头。
      */
-    String NOTIFY_LOGOFF_HEADER = "<< LOGOFF >>";
+    public static final String NOTIFY_LOGOFF_HEADER = "<< LOGOFF >>";
     
     // << MESSAGE >>> <<<< (UUID) >>>> << MESSAGE >> (messageContent)
     /**
      * 信息包的左半部分。
      * 格式： &lt;&lt; MESSAGE &gt;&gt;&gt; &lt;&lt;&lt;&lt; (UUID) &gt;&gt;&gt;&gt; &lt;&lt; MESSAGE &gt;&gt; (内容)
      */
-    String MESSAGE_HEADER_LEFT_HALF = "<< MESSAGE >>> <<<<";
+    public static final String MESSAGE_HEADER_LEFT_HALF = "<< MESSAGE >>> <<<<";
     
     /**
      * 信息包的中间部分。
      * 格式： &lt;&lt; MESSAGE &gt;&gt;&gt; &lt;&lt;&lt;&lt; (UUID) &gt;&gt;&gt;&gt; &lt;&lt; MESSAGE &gt;&gt; (内容)
      */
-    String MESSAGE_HEADER_MIDDLE_HALF = ">>>>>";
+    public static final String MESSAGE_HEADER_MIDDLE_HALF = ">>>>>";
     
     /**
      * 信息包的右半部分。
      * 格式： &lt;&lt; MESSAGE &gt;&gt;&gt; &lt;&lt;&lt;&lt; (UUID) &gt;&gt;&gt;&gt; &lt;&lt; MESSAGE &gt;&gt; (内容)
      */
-    String MESSAGE_HEADER_RIGHT_HALF = " << MESSAGE >>";
+    public static final String MESSAGE_HEADER_RIGHT_HALF = " << MESSAGE >>";
     
     /**
      * 调试模式的信号字。目前是让服务器把用户档案打印出来。
      */
-    String DEBUG_MODE_STRING = "/// DEBUG ///";
+    public static final String DEBUG_MODE_STRING = "/// DEBUG ///";
     
     /**
      * 调试模式的信号字。目前是让服务器把用户档案打印出来。
      */
-    String BROADCAST_MESSAGE_UUID = "SERVER";
+    public static final String BROADCAST_MESSAGE_UUID = "SERVER";
     
     // <<< DUP ? >>> (Name)
     /**
      * 用户名查询服务请求头。
      */
-    String CHECK_DUPLICATE_REQUEST_HEADER = "<<< DUP ? >>> ";
+    public static final String CHECK_DUPLICATE_REQUEST_HEADER = "<<< DUP ? >>> ";
     
     /**
      * 用户名查询服务响应 - 用户名已经占用
      */
-    String USER_NAME_DUPLICATED = ">>> DUPLICATED <<< ";
+    public static final String USER_NAME_DUPLICATED = ">>> DUPLICATED <<< ";
     
     /**
      * 用户名查询服务响应 - 用户名没有占用
      */
-    String USER_NAME_NOT_EXIST = "<<< Clear >>>";
+    public static final String USER_NAME_NOT_EXIST = "<<< Clear >>>";
 
     /**
      * WebSocket 客户端注册请求头 - 左半
      */
-    String WEBSOCKET_UUID_HEADER = "<WS><<";
+    public static final String WEBSOCKET_UUID_HEADER = "<WS><<";
 
     /**
      * WebSocket 客户端注册请求头 - 右半
      */
-    String WEBSOCKET_UUID_TAIL = ">>";
+    public static final String WEBSOCKET_UUID_TAIL = ">>";
 
     // << IK >> (UUID)
     /**
      * 服务器通知客户端密钥出错的信号字
      */
-    String INVALID_KEY_NOTIFYING_STRING_HEADER = "<< INVALID_KEY >> ";
+    public static final String INVALID_KEY_NOTIFYING_STRING_HEADER = "<< INVALID_KEY >> ";
 }

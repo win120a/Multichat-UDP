@@ -1,0 +1,32 @@
+
+O
+java:S1602¬",Remove useless curly braces around statement(Ãî´§şÿÿÿÿ8ÉŠø—°.
+F
+java:S1148Ü"#Use a logger to log this exception.(îÙ÷Çùÿÿÿÿ8ÉŠø—°.
+F
+java:S1148ˆ"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8ÉŠø—°.
+F
+java:S1148©"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8ÉŠø—°.
+F
+java:S1148ø"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8ÉŠø—°.
+U
+java:S1128"8Remove this unused import 'java.security.MessageDigest'.(Œğ²»8Öé®™°.
+O
+java:S1602Ê",Remove useless curly braces around statement(óóôâıÿÿÿÿ8ÉŠø—°.
+h
+java:S2184Œ"ECast one of the operands of this subtraction operation to a "double".(óÅ—úÿÿÿÿ8‹›»™°.
+h	java:S112‰"FDefine and throw a dedicated exception instead of using a generic one.(Ò‚Òéüÿÿÿÿ8ÉŠø—°.
+M
+java:S1128"0Remove this unused import 'java.util.ArrayList'.(÷‰îƒ8î°Ä™°.
+R
+java:S1611˜"/Remove the parentheses around the "v" parameter(ğ•àÿÿÿÿÿ8ÉŠø—°.
+F
+java:S1148œ"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8ÉŠø—°.
+F
+java:S1148È"#Use a logger to log this exception.(îÙ÷Çùÿÿÿÿ8ÉŠø—°.
+d
+java:S1126‚"AReplace this if-then-else statement by a single return statement.(Ü¡ãÿÿÿÿÿ8ÉŠø—°.
+F
+java:S1148•"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8àÎ™°.
+u
+java:S3776—"RRefactor this method to reduce its Cognitive Complexity from 28 to the 15 allowed.(£÷¬ûøÿÿÿÿ8ÉŠø—°.

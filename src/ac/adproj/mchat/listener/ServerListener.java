@@ -23,7 +23,7 @@ import ac.adproj.mchat.handler.Handler;
 import ac.adproj.mchat.handler.MessageType;
 import ac.adproj.mchat.handler.ServerMessageHandler;
 import ac.adproj.mchat.model.Listener;
-import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.model.User;
 import ac.adproj.mchat.service.CommonThreadPool;
 import ac.adproj.mchat.service.MessageDistributor;
@@ -48,6 +48,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+
+import static ac.adproj.mchat.model.ProtocolStrings.*;
 
 /**
  * 聊天服务器 UDP 协议通信类。
@@ -140,16 +142,16 @@ public class ServerListener implements Listener {
                 // << MESSAGE >>> <<<< (UUID) >>>> << MESSAGE >> (messageContent)
                 
                 String decryptedMessage = new AESCryptoServiceImpl(key, ivBytes).decryptMessageFromBase64String(encryptedText);
-                rawMessage = Protocol.MESSAGE_HEADER_LEFT_HALF + uuid + Protocol.MESSAGE_HEADER_MIDDLE_HALF + Protocol.MESSAGE_HEADER_RIGHT_HALF
+                rawMessage = MESSAGE_HEADER_LEFT_HALF + uuid + ProtocolStrings.MESSAGE_HEADER_MIDDLE_HALF + MESSAGE_HEADER_RIGHT_HALF
                         + decryptedMessage;
                 
             } catch (InvalidKeyException e) {
                 LOG.warn("Invalid Key! ");
-                sendCommunicationData(Protocol.INVALID_KEY_NOTIFYING_STRING_HEADER + uuid, uuid);
+                sendCommunicationData(ProtocolStrings.INVALID_KEY_NOTIFYING_STRING_HEADER + uuid, uuid);
             } catch (BadPaddingException e) {
                 bb.clear();
                 LOG.warn(String.format("Incorrect Key: [UUID = %s]", uuid), e);
-                sendCommunicationData(Protocol.INVALID_KEY_NOTIFYING_STRING_HEADER + uuid, uuid);
+                sendCommunicationData(ProtocolStrings.INVALID_KEY_NOTIFYING_STRING_HEADER + uuid, uuid);
                 return;
             }
         }
@@ -187,7 +189,7 @@ public class ServerListener implements Listener {
         threadPool.submit(userNameQueryService);
 
         serverDatagramChannel = DatagramChannel.open();
-        serverDatagramChannel.bind(new InetSocketAddress(Protocol.SERVER_PORT));
+        serverDatagramChannel.bind(new InetSocketAddress(ProtocolStrings.SERVER_PORT));
 
         // 接受 UDP 连接的线程执行体
         Runnable connectionReceivingRunnable = () -> {
@@ -196,7 +198,7 @@ public class ServerListener implements Listener {
 
             while (true) {
                 try {
-                    final ByteBuffer bb = ByteBuffer.allocate(Protocol.BUFFER_SIZE);
+                    final ByteBuffer bb = ByteBuffer.allocate(ProtocolStrings.BUFFER_SIZE);
                     SocketAddress address = serverDatagramChannel.receive(bb);
 
                     threadPool.execute(() -> {
@@ -249,9 +251,9 @@ public class ServerListener implements Listener {
     public void sendCommunicationData(String text, String uuid) {
         final ByteBuffer bb = ByteBuffer.wrap(text.getBytes(StandardCharsets.UTF_8));
 
-        if (uuid.equals(Protocol.BROADCAST_MESSAGE_UUID)) {
+        if (uuid.equals(ProtocolStrings.BROADCAST_MESSAGE_UUID)) {
             // 服务器发出的消息。
-            if (MessageType.INCOMING_MESSAGE.tokenize(text).get("uuid").equals(Protocol.BROADCAST_MESSAGE_UUID)) {
+            if (MessageType.INCOMING_MESSAGE.tokenize(text).get("uuid").equals(ProtocolStrings.BROADCAST_MESSAGE_UUID)) {
                 try {
                     // 同时更新 UI 和 WebSocket
                     MessageDistributor.getInstance().sendRawProtocolMessage(text);
@@ -283,7 +285,7 @@ public class ServerListener implements Listener {
 
     @Override
     public void sendMessage(String message, String uuid) {
-        sendCommunicationData(MESSAGE_HEADER_LEFT_HALF + Protocol.BROADCAST_MESSAGE_UUID + MESSAGE_HEADER_MIDDLE_HALF
+        sendCommunicationData(MESSAGE_HEADER_LEFT_HALF + ProtocolStrings.BROADCAST_MESSAGE_UUID + MESSAGE_HEADER_MIDDLE_HALF
                 + MESSAGE_HEADER_RIGHT_HALF + message, uuid);
     }
 
@@ -306,7 +308,7 @@ public class ServerListener implements Listener {
         userManager.userProfileValueSet().forEach((v) -> {
             try {
                 final ByteBuffer bb = ByteBuffer
-                        .wrap((Protocol.NOTIFY_LOGOFF_HEADER + "SERVER").getBytes(StandardCharsets.UTF_8));
+                        .wrap((ProtocolStrings.NOTIFY_LOGOFF_HEADER + "SERVER").getBytes(StandardCharsets.UTF_8));
 
                 serverDatagramChannel.send(bb, v.getAddress());
             } catch (IOException e) {

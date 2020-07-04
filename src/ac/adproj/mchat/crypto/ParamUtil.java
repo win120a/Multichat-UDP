@@ -17,9 +17,21 @@
 
 package ac.adproj.mchat.crypto;
 
+/**
+ * 加密算法参数工具类
+ *
+ * @author Andy Cheung
+ */
 public final class ParamUtil {
     private ParamUtil() { throw new UnsupportedOperationException("No instance! "); }
 
+    /**
+     * 根据 UUID 字符串计算 IV 值。
+     * @param str 字符串
+     * @param length IV 的长度
+     * @return 计算过的初始化向量
+     * @implNote 直接取前 length 位，使用 String 的 hashCode 算法得出对应位 Hash，之后填充。
+     */
     public static byte[] getIVFromString(String str, int length) {
         byte[] ivBytes = new byte[length];
 

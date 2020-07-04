@@ -24,7 +24,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
 
-import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.model.ProtocolStrings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 用户名检查服务的线程执行体。
@@ -36,23 +38,25 @@ public class UserNameQueryService implements Runnable {
     private boolean stopSelf;
     private UserManager userManager;
 
+    private static final Logger LOG = LoggerFactory.getLogger(UserNameQueryService.class);
+
     public UserNameQueryService() throws IOException {
         dc = DatagramChannel.open();
         dc.configureBlocking(true);
-        dc.bind(new InetSocketAddress(Protocol.SERVER_CHECK_DUPLICATE_PORT));
+        dc.bind(new InetSocketAddress(ProtocolStrings.SERVER_CHECK_DUPLICATE_PORT));
         userManager = UserManager.getInstance();
     }
 
     private void reInit() throws IOException {
         dc = DatagramChannel.open();
         dc.configureBlocking(true);
-        dc.bind(new InetSocketAddress(Protocol.SERVER_CHECK_DUPLICATE_PORT));
+        dc.bind(new InetSocketAddress(ProtocolStrings.SERVER_CHECK_DUPLICATE_PORT));
     }
 
     @Override
     public void run() {
-        ByteBuffer bb = ByteBuffer.allocate(Protocol.BUFFER_SIZE);
-        StringBuffer buffer = new StringBuffer();
+        ByteBuffer bb = ByteBuffer.allocate(ProtocolStrings.BUFFER_SIZE);
+        StringBuilder buffer = new StringBuilder();
 
         while (!stopSelf) {
 
@@ -75,19 +79,7 @@ public class UserNameQueryService implements Runnable {
                 buffer.delete(0, buffer.length());
                 bb.clear();
 
-                if (message.startsWith(Protocol.CHECK_DUPLICATE_REQUEST_HEADER)) {
-                    String name = message.replace(Protocol.CHECK_DUPLICATE_REQUEST_HEADER, "");
-                    String result = userManager.containsName(name) ? Protocol.USER_NAME_DUPLICATED
-                            : Protocol.USER_NAME_NOT_EXIST;
-
-                    bb.put(result.getBytes(StandardCharsets.UTF_8));
-
-                    bb.flip();
-
-                    dc.send(bb, address);
-
-                    bb.clear();
-                }
+                handleMessage(bb, address, message);
             } catch (IOException e) {
                 String name = e.getClass().getName();
                 if (name.contains("ClosedByInterruptException") || name.contains("AsynchronousCloseException")) {
@@ -95,16 +87,30 @@ public class UserNameQueryService implements Runnable {
                     return;
                 }
 
-                e.printStackTrace();
+                LOG.error("Error in User Name Query Service.", e);
             }
         }
 
-        if (stopSelf) {
-            try {
-                dc.close();
-            } catch (IOException e) {
-                // ignore
-            }
+        try {
+            dc.close();
+        } catch (IOException ignored) {
+            // ignore
+        }
+    }
+
+    private void handleMessage(ByteBuffer bb, SocketAddress address, String message) throws IOException {
+        if (message.startsWith(ProtocolStrings.CHECK_DUPLICATE_REQUEST_HEADER)) {
+            String name = message.replace(ProtocolStrings.CHECK_DUPLICATE_REQUEST_HEADER, "");
+            String result = userManager.containsName(name) ? ProtocolStrings.USER_NAME_DUPLICATED
+                    : ProtocolStrings.USER_NAME_NOT_EXIST;
+
+            bb.put(result.getBytes(StandardCharsets.UTF_8));
+
+            bb.flip();
+
+            dc.send(bb, address);
+
+            bb.clear();
         }
     }
 

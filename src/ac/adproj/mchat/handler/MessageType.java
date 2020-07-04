@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.model.ProtocolStrings;
 
 /**
  * 消息类型枚举和消息元素分离器类。
@@ -72,17 +72,17 @@ public enum MessageType {
      * @return 对应的 MessageType 对象。
      */
     public static MessageType getMessageType(String message) {
-        if (message.startsWith(Protocol.CONNECTING_GREET_LEFT_HALF)) {
+        if (message.startsWith(ProtocolStrings.CONNECTING_GREET_LEFT_HALF)) {
             return REGISTER;
-        } else if (message.startsWith(Protocol.DEBUG_MODE_STRING)) {
+        } else if (message.startsWith(ProtocolStrings.DEBUG_MODE_STRING)) {
             return DEBUG;
-        } else if (message.startsWith(Protocol.NOTIFY_LOGOFF_HEADER)) {
+        } else if (message.startsWith(ProtocolStrings.NOTIFY_LOGOFF_HEADER)) {
             return LOGOFF;
-        } else if (message.startsWith(Protocol.MESSAGE_HEADER_LEFT_HALF)) {
+        } else if (message.startsWith(ProtocolStrings.MESSAGE_HEADER_LEFT_HALF)) {
             return INCOMING_MESSAGE;
-        } else if (message.startsWith(Protocol.CHECK_DUPLICATE_REQUEST_HEADER)) {
+        } else if (message.startsWith(ProtocolStrings.CHECK_DUPLICATE_REQUEST_HEADER)) {
             return USERNAME_QUERY_REQUEST;
-        } else if (message.startsWith(Protocol.INVALID_KEY_NOTIFYING_STRING_HEADER)) {
+        } else if (message.startsWith(ProtocolStrings.INVALID_KEY_NOTIFYING_STRING_HEADER)) {
             return INVALID_KEY;
         }
         return MessageType.UNKNOWN;
@@ -99,8 +99,8 @@ public enum MessageType {
 
         switch (this) {
             case REGISTER:
-                String[] data = message.replace(Protocol.CONNECTING_GREET_LEFT_HALF, "")
-                        .replace(Protocol.CONNECTING_GREET_RIGHT_HALF, "").split(Protocol.CONNECTING_GREET_MIDDLE_HALF);
+                String[] data = message.replace(ProtocolStrings.CONNECTING_GREET_LEFT_HALF, "")
+                        .replace(ProtocolStrings.CONNECTING_GREET_RIGHT_HALF, "").split(ProtocolStrings.CONNECTING_GREET_MIDDLE_HALF);
 
                 String uuid = data[0];
                 String name = data[1];
@@ -110,15 +110,15 @@ public enum MessageType {
                 break;
 
             case LOGOFF:
-                String targetUuid = message.replace(Protocol.NOTIFY_LOGOFF_HEADER, "");
+                String targetUuid = message.replace(ProtocolStrings.NOTIFY_LOGOFF_HEADER, "");
 
                 ret = of("uuid", targetUuid);
                 
                 break;
 
             case INCOMING_MESSAGE:
-                String[] msgData = message.replace(Protocol.MESSAGE_HEADER_LEFT_HALF, "")
-                        .replace(Protocol.MESSAGE_HEADER_RIGHT_HALF, "").split(Protocol.MESSAGE_HEADER_MIDDLE_HALF);
+                String[] msgData = message.replace(ProtocolStrings.MESSAGE_HEADER_LEFT_HALF, "")
+                        .replace(ProtocolStrings.MESSAGE_HEADER_RIGHT_HALF, "").split(ProtocolStrings.MESSAGE_HEADER_MIDDLE_HALF);
 
                 final int vaildDataArrayLength = 2;
 
@@ -133,7 +133,7 @@ public enum MessageType {
                 
                 break;
             case USERNAME_QUERY_REQUEST:
-                ret = of("username", message.replace(Protocol.CHECK_DUPLICATE_REQUEST_HEADER, ""));
+                ret = of("username", message.replace(ProtocolStrings.CHECK_DUPLICATE_REQUEST_HEADER, ""));
                 break;
             case UNKNOWN:
             default:

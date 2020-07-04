@@ -1,0 +1,26 @@
+
+fjavascript:S905
+"FExpected an assignment or function call and instead saw an expression.(ÐîÄ“ýÿÿÿÿ
+Xjavascript:S1481
+"7Remove the declaration of the unused 'define' variable.(ÐîÄ“ýÿÿÿÿ
+Xjavascript:S1481
+"7Remove the declaration of the unused 'module' variable.(ÐîÄ“ýÿÿÿÿ
+Yjavascript:S1481
+"8Remove the declaration of the unused 'exports' variable.(ÐîÄ“ýÿÿÿÿ
+Ljavascript:S1117
+"+'o' is already declared in the upper scope.(ÐîÄ“ýÿÿÿÿ
+œjavascript:S2681
+"{This statement will not be executed conditionally; only the first statement will be. The rest will execute unconditionally.(ÐîÄ“ýÿÿÿÿ
+œjavascript:S2681
+"{This statement will not be executed conditionally; only the first statement will be. The rest will execute unconditionally.(ÐîÄ“ýÿÿÿÿ
+Ljavascript:S1117
+"+'e' is already declared in the upper scope.(ÐîÄ“ýÿÿÿÿ
+Ljavascript:S1117
+"+'n' is already declared in the upper scope.(ÐîÄ“ýÿÿÿÿ
+’javascript:S2681
+"qThis statement will not be executed in a loop; only the first statement will be. The rest will execute only once.(ÐîÄ“ýÿÿÿÿ
+Qjavascript:S1117
+"0'module' is already declared in the upper scope.(ÐîÄ“ýÿÿÿÿ
+Rjavascript:S1117
+"1'exports' is already declared in the upper scope.(ÐîÄ“ýÿÿÿÿ
+7javascript:S1116v"Unnecessary semicolon.(Åñ­õþÿÿÿÿ

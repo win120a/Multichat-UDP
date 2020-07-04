@@ -23,6 +23,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import ac.adproj.mchat.handler.MessageType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 消息分派器。
@@ -50,7 +52,8 @@ public class MessageDistributor {
 
     private BlockingQueue<String> uiMessages;
     private LinkedList<SubscriberCallback> callbacks;
-    
+    private static final Logger MDS_LOG = LoggerFactory.getLogger(MessageDistributingService.class);
+
     private class MessageDistributingService implements Runnable {
         @Override
         public void run() {
@@ -62,11 +65,16 @@ public class MessageDistributor {
                         cb.onMessageReceived(message);
                     }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+
+                    MDS_LOG.error(String.format("MDS - Interrupted by " +
+                            "other thread. [ThreadName: %s]",
+                            Thread.currentThread().getName()), e);
+
                     break;
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    continue;
+                    MDS_LOG.error(String.format("MDS - Other exception occurred. [ThreadName: %s]",
+                            Thread.currentThread().getName()), e);
                 }
             }
         }

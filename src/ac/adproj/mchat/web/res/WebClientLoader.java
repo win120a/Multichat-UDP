@@ -17,6 +17,9 @@
 
 package ac.adproj.mchat.web.res;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -29,6 +32,12 @@ import java.io.IOException;
  * @since 2020/5/22
  */
 public final class WebClientLoader {
+    private WebClientLoader() {
+        throw new UnsupportedOperationException("No instance! ");
+    }
+
+    private static final Logger LOG = LoggerFactory.getLogger(WebClientLoader.class);
+
     public static final String WAR_NAME_IN_RESOURCE_PATH = "webClient.war"; 
     /**
      * 加载应用包。（退出时会删除）
@@ -51,12 +60,14 @@ public final class WebClientLoader {
 
             return f.getAbsolutePath();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("Error in loading web app file.", e);
             
             return null;
         } finally {
             try {
-                fos.close();
+                if (fos != null) {
+                    fos.close();
+                }
             } catch (IOException e) {
                 // ignore
             }

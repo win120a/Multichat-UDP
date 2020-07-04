@@ -19,7 +19,7 @@ package ac.adproj.mchat.ui;
 
 import java.io.IOException;
 
-import ac.adproj.mchat.model.Protocol;
+import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.service.MessageDistributor;
 import ac.adproj.mchat.web.WebServerStarter;
@@ -34,14 +34,12 @@ public class HeadlessServer {
         System.out.println("AC Multichat Server (UDP, Headless)");
         System.out.println(String.format(
                             "Accepting UDP Connection on port %d, WebSocket connection on %d."
-                                , Protocol.SERVER_PORT, 8090));
+                                , ProtocolStrings.SERVER_PORT, 8090));
         System.out.println("Press <Ctrl> + <C / D> to stop.");
         System.out.println();
         
         try (ServerListener listener = ServerListener.getInstance(); WebServerStarter starter = new WebServerStarter()) {
-            MessageDistributor.getInstance().registerSubscriber((message) -> {
-                System.out.println(message);
-            });
+            MessageDistributor.getInstance().registerSubscriber(System.out::println);
             
             starter.start(8090);
             
