@@ -1,7 +1,0 @@
-
-z
-java:S11497"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(¨âàøÿÿÿÿ
->
-java:S1148b"#Use a logger to log this exception.(€ÉÔ…ýÿÿÿÿ
-h
-java:S37765"RRefactor this method to reduce its Cognitive Complexity from 19 to the 15 allowed.(“–ýþ

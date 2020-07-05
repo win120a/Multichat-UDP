@@ -86,7 +86,7 @@ public class UserManager implements Iterable<User> {
     
     /**
      * 查询注册用户表中是否存在这个 UUID
-     * @param name 查询的 UUID
+     * @param uuid 查询的 UUID
      * @return UUID 存在，返回真。
      */
     public boolean containsUuid(String uuid) {
@@ -105,8 +105,8 @@ public class UserManager implements Iterable<User> {
 
     /**
      * 获取 UUID 号对应用户名。
-     * @param uuid
-     * @return
+     * @param uuid 用户 UUID
+     * @return 用户名
      */
     public String getName(String uuid) {
         return lookup(uuid).getName();

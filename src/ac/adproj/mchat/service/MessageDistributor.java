@@ -57,7 +57,7 @@ public class MessageDistributor {
     private class MessageDistributingService implements Runnable {
         @Override
         public void run() {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     String message = uiMessages.take();
                     

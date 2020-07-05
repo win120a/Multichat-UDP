@@ -36,7 +36,7 @@ public class ClientConfigurationDialog extends Shell {
     /**
      * Create the shell.
      *
-     * @param display
+     * @param display Display Object.
      */
     public ClientConfigurationDialog(Display display) {
         super(display, SWT.CLOSE | SWT.TITLE | SWT.APPLICATION_MODAL);

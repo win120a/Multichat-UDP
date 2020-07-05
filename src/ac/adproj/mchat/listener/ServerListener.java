@@ -192,50 +192,62 @@ public class ServerListener implements Listener {
         serverDatagramChannel.bind(new InetSocketAddress(ProtocolStrings.SERVER_PORT));
 
         // 接受 UDP 连接的线程执行体
-        Runnable connectionReceivingRunnable = () -> {
-            // 用于规避内部类变量 final 限制的List （可变类）
-            List<SocketAddress> ll = Collections.synchronizedList(new LinkedList<>());
+        Runnable connectionReceivingRunnable = () -> receiveConnection(handler);
 
-            while (true) {
-                try {
-                    final ByteBuffer bb = ByteBuffer.allocate(ProtocolStrings.BUFFER_SIZE);
-                    SocketAddress address = serverDatagramChannel.receive(bb);
+        threadPool.execute(connectionReceivingRunnable);
+    }
 
-                    threadPool.execute(() -> {
-                        ll.add(address);
+    /**
+     * 接受 UDP 连接。
+     *
+     * @param handler 服务器消息处理器
+     */
+    private void receiveConnection(ServerMessageHandler handler) {
+        // 用于规避内部类变量 final 限制的List （可变类）
+        List<SocketAddress> ll = Collections.synchronizedList(new LinkedList<>());
 
-                        readMessage(bb, handler, 0, ll.get(0));
+        Thread currentThread = Thread.currentThread();
 
-                        ll.clear();
-                    });
+        final ByteBuffer bb = ByteBuffer.allocate(ProtocolStrings.BUFFER_SIZE);
 
-                } catch (Exception exc) {
-                    if (exc.getClass() == ClosedByInterruptException.class) {
-                        // 程序退出了会发生这个异常，忽略。
-                        return;
+        while (!currentThread.isInterrupted()) {
+            try {
+                SocketAddress address = serverDatagramChannel.receive(bb);
+
+                threadPool.execute(() -> {
+                    ll.add(address);
+
+                    readMessage(bb, handler, 0, ll.get(0));
+
+                    ll.clear();
+                });
+
+            } catch (Exception exc) {
+                if (exc.getClass() == ClosedByInterruptException.class) {
+                    // 程序退出了会发生这个异常，忽略。
+                    return;
+                }
+
+                SoftReference<User> sr = null;
+
+                for (User user : userManager.userProfileValueSet()) {
+                    if (user.getAddress().equals(ll.get(0))) {
+                        sr = new SoftReference<>(user);
                     }
+                }
 
-                    SoftReference<User> sr = null;
-
-                    for (User user : userManager.userProfileValueSet()) {
-                        if (user.getAddress().equals(ll.get(0))) {
-                            sr = new SoftReference<>(user);
-                        }
-                    }
-
+                if (sr != null) {
                     userManager.deleteUserProfile(sr.get().getUuid());
 
                     LOG.warn(String.format("Got exception when receiving message. UUID: %s", sr.get().getUuid()), exc);
 
                     sr.clear();
                     sr = null;
-
-                    ll.clear();
                 }
-            }
-        };
 
-        threadPool.execute(connectionReceivingRunnable);
+                ll.clear();
+            }
+        }
     }
 
     @Override

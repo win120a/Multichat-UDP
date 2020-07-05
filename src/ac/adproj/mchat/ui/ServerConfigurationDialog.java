@@ -1,27 +1,30 @@
 package ac.adproj.mchat.ui;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import ac.adproj.mchat.ui.ClientConfigurationDialog.StatusWrapper;
-
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-
+/**
+ * 服务器配置窗口。
+ * 
+ * @author Andy Cheung
+ */
 public class ServerConfigurationDialog extends Shell {
     private Text keyFile;
     private StatusWrapper status;
 
     /**
-     * Launch the application.
-     * @param args
+     * 显示对话框。
+     * 
+     * @return 含有配置信息的包装类对象。
      */
     public static StatusWrapper showDialog() {
         try {
@@ -58,7 +61,7 @@ public class ServerConfigurationDialog extends Shell {
 
     /**
      * Create the shell.
-     * @param display
+     * @param display The display object.
      */
     public ServerConfigurationDialog(Display display) {
         super(display, SWT.CLOSE | SWT.TITLE);

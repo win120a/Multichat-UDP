@@ -64,9 +64,12 @@ public class ClientListener implements Listener {
      * @param address   服务器地址
      * @param port      客户端端口
      * @param username  用户名
+     * @param keyFile   密钥文件名
+     * 
+     * @throws IOException 出现 I/O 错误
      */
-    public ClientListener(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username, String keyFile)
-            throws IOException {
+    public ClientListener(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username,
+            String keyFile) throws IOException {
         this.name = username;
         this.key = keyFile.isEmpty() ? null : new AESKeyServiceImpl().readKeyFromFile(keyFile);
 
@@ -204,8 +207,7 @@ public class ClientListener implements Listener {
 
                 display.syncExec(() -> {
                     try {
-                        uiActions.accept(
-                                handler.handleMessage(sbuffer.toString(), socketChannel.getRemoteAddress()));
+                        uiActions.accept(handler.handleMessage(sbuffer.toString(), socketChannel.getRemoteAddress()));
                     } catch (IOException exc) {
                         LOG.error("Failed to get remote address.", exc);
 

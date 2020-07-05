@@ -26,6 +26,8 @@ import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.model.User;
 import ac.adproj.mchat.service.UserManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static ac.adproj.mchat.handler.MessageType.*;
 
@@ -38,6 +40,8 @@ import static ac.adproj.mchat.handler.MessageType.*;
 public class ServerMessageHandler implements Handler {
     private UserManager userManager = UserManager.getInstance();
     private ServerListener listener;
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServerMessageHandler.class);
 
     public ServerMessageHandler(ServerListener listener) {
         super();
@@ -54,22 +58,24 @@ public class ServerMessageHandler implements Handler {
 
                 userManager.register(userObject);
 
+                LOG.debug("[UDP] Registering, UUID = {}, Nickname = {}", userObject.getUuid(), userObject.getName());
+
                 return "Client: " + data.get("uuid") + " (" + data.get("name") + ") Connected.";
 
             case DEBUG:
                 // 调试模式
-                System.out.println(userManager.toString());
+                LOG.debug("[UDP] Users: {}", userManager);
                 return "";
 
             case LOGOFF:
                 // 客户端请求注销
-                SoftReference<String> targetUuid = new SoftReference<String>(LOGOFF.tokenize(message).get("uuid"));
+                SoftReference<String> targetUuid = new SoftReference<>(LOGOFF.tokenize(message).get("uuid"));
 
                 try {
-                    System.out.println("Disconnecting: " + targetUuid.get());
+                    LOG.debug("[UDP] Disconnecting, UUID = {}.", targetUuid.get());
                     listener.logoff(targetUuid.get());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    LOG.warn(String.format("[UDP] Disconnecting failed, UUID = %s.", targetUuid.get()), e);
                 }
 
                 return "Client: " + message.replace(ProtocolStrings.NOTIFY_LOGOFF_HEADER, "") + " Disconnected.";
@@ -96,7 +102,7 @@ public class ServerMessageHandler implements Handler {
                 for (User u : userManager.userProfileValueSet()) {
                     if (!fromUuid.equals(u.getUuid())) {
                         listener.sendCommunicationData(nameOnlyProtocolMessage, u.getUuid());
-                        System.out.println("Forwarding message to " + u.getUuid() + " message: " + messageText);
+                        LOG.debug("Forwarding message to {}, message: {}", u.getUuid(), messageText);
                     }
                 }
 

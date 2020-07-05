@@ -31,13 +31,18 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+/**
+ * 生成密钥的对话框。
+ * 
+ * @author Andy Cheung
+ */
 public class KeyGenerationDialog extends Shell {
     private final Text text;
 
     /**
      * Create the shell.
      *
-     * @param display
+     * @param display Display Object.
      */
     public KeyGenerationDialog(Display display) {
         super(display, SWT.CLOSE | SWT.TITLE | SWT.APPLICATION_MODAL);

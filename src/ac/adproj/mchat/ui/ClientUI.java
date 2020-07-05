@@ -23,8 +23,10 @@ import static ac.adproj.mchat.ui.CommonDialogs.inputDialog;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
+import java.util.logging.LogManager;
 
 import org.eclipse.swt.widgets.Display;
 

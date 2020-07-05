@@ -21,6 +21,11 @@ import javax.crypto.KeyGenerator;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * 密钥服务的 AES 实现。
+ * 
+ * @author Andy Cheung
+ */
 public class AESKeyServiceImpl extends AbstractSymmetricKeyService {
     @Override
     public Key generateKey() {

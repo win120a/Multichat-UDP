@@ -20,6 +20,11 @@ package ac.adproj.mchat.crypto.key;
 import java.io.*;
 import java.security.Key;
 
+/**
+ * 密钥服务的抽象模板类。
+ * 
+ * @author Andy Cheung
+ */
 public abstract class AbstractSymmetricKeyService implements SymmetricKeyService {
 
     @Override

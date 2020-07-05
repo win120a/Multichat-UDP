@@ -24,7 +24,9 @@ package ac.adproj.mchat.model;
  */
 public final class ProtocolStrings {
 
-    // NO-OP Constructor.
+    /**
+     * NO-OP Constructor.
+     */
     private ProtocolStrings() {
         throw new AssertionError("No 'ProtocolStrings' instance for you! ");
     }
