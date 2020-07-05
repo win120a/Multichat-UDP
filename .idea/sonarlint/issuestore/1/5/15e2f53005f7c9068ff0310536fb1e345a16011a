@@ -1,4 +1,4 @@
 
-Q	java:S110+"<This class has 9 parents which is greater than 5 authorized.(×ºÉÙ
+Q	java:S110,"<This class has 9 parents which is greater than 5 authorized.(×ºÉÙ
 H
-java:S16021",Remove useless curly braces around statement(Ş³Ïa8êòÀ¯°.
+java:S16022",Remove useless curly braces around statement(Ş³Ïa8êòÀ¯°.

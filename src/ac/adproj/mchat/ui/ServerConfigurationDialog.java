@@ -101,6 +101,9 @@ public class ServerConfigurationDialog extends Shell {
         cancel.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+                status = new StatusWrapper(null);
+                ServerConfigurationDialog.this.setVisible(false);
+                dispose();
             }
         });
         fd_ok.right = new FormAttachment(100, -354);
@@ -125,14 +128,21 @@ public class ServerConfigurationDialog extends Shell {
         btnNewButton.setLayoutData(fd_btnNewButton);
         btnNewButton.setText("\u751F\u6210");
         
-        Button btnNewButton_1 = new Button(this, SWT.NONE);
+        Button browse = new Button(this, SWT.NONE);
+        browse.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                String path = CommonDialogs.chooseFileDialog();
+                keyFile.setText(path == null ? "" : path);
+            }
+        });
         fd_btnNewButton.right = new FormAttachment(100, -94);
-        FormData fd_btnNewButton_1 = new FormData();
-        fd_btnNewButton_1.bottom = new FormAttachment(0, 68);
-        fd_btnNewButton_1.left = new FormAttachment(btnNewButton, 6);
-        fd_btnNewButton_1.top = new FormAttachment(0, 34);
-        btnNewButton_1.setLayoutData(fd_btnNewButton_1);
-        btnNewButton_1.setText("\u6D4F\u89C8\u2026\u2026");
+        FormData fd_browse = new FormData();
+        fd_browse.bottom = new FormAttachment(0, 68);
+        fd_browse.left = new FormAttachment(btnNewButton, 6);
+        fd_browse.top = new FormAttachment(0, 34);
+        browse.setLayoutData(fd_browse);
+        browse.setText("\u6D4F\u89C8\u2026\u2026");
         createContents();
     }
 

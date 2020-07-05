@@ -162,6 +162,13 @@ public class ClientConfigurationDialog extends Shell {
         generateKey.setText("\u751F\u6210");
 
         Button browseKey = new Button(this, SWT.NONE);
+        browseKey.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                String path = CommonDialogs.chooseFileDialog();
+                keyFile.setText(path == null ? "" : path);
+            }
+        });
         fd_generateKey.right = new FormAttachment(100, -88);
         FormData fd_browseKey = new FormData();
         fd_browseKey.left = new FormAttachment(generateKey, 6);

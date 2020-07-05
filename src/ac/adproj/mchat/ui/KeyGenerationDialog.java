@@ -37,7 +37,7 @@ import java.io.IOException;
  * @author Andy Cheung
  */
 public class KeyGenerationDialog extends Shell {
-    private final Text text;
+    private final Text keyFile;
 
     /**
      * Create the shell.
@@ -55,7 +55,7 @@ public class KeyGenerationDialog extends Shell {
                 SymmetricKeyService sks = new AESKeyServiceImpl();
 
                 try {
-                    sks.generateKeyAndStoreToFile(text.getText());
+                    sks.generateKeyAndStoreToFile(keyFile.getText());
                 } catch (IOException e1) {
                     CommonDialogs.errorDialog("I/O 错误");
                 }
@@ -90,17 +90,24 @@ public class KeyGenerationDialog extends Shell {
         fd_label_2.top = new FormAttachment(0, 32);
         label_2.setLayoutData(fd_label_2);
 
-        text = new Text(this, SWT.BORDER);
-        fd_label_2.right = new FormAttachment(text, -6);
-        FormData fd_text = new FormData();
-        fd_text.top = new FormAttachment(label_2, -3, SWT.TOP);
-        fd_text.left = new FormAttachment(0, 106);
-        fd_text.right = new FormAttachment(100, -156);
-        text.setLayoutData(fd_text);
+        keyFile = new Text(this, SWT.BORDER);
+        fd_label_2.right = new FormAttachment(keyFile, -6);
+        FormData fd_keyFile = new FormData();
+        fd_keyFile.top = new FormAttachment(label_2, -3, SWT.TOP);
+        fd_keyFile.left = new FormAttachment(0, 106);
+        fd_keyFile.right = new FormAttachment(100, -156);
+        keyFile.setLayoutData(fd_keyFile);
 
         Button browseKey = new Button(this, SWT.NONE);
+        browseKey.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                String path = CommonDialogs.chooseFileDialog();
+                keyFile.setText(path == null ? "" : path);
+            }
+        });
         FormData fd_browseKey = new FormData();
-        fd_browseKey.left = new FormAttachment(text, 19);
+        fd_browseKey.left = new FormAttachment(keyFile, 19);
         fd_browseKey.right = new FormAttachment(100, -10);
         fd_browseKey.top = new FormAttachment(label_2, -5, SWT.TOP);
         browseKey.setLayoutData(fd_browseKey);

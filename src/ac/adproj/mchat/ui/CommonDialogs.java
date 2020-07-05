@@ -19,6 +19,7 @@ package ac.adproj.mchat.ui;
 
 import java.util.function.Predicate;
 
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -100,5 +101,22 @@ public final class CommonDialogs {
      */
     private static void swingErrorDialog(String message) {
         JOptionPane.showMessageDialog(null, message, "ERROR", JOptionPane.ERROR_MESSAGE);
+    }
+    
+    /**
+     * 显示选择文件对话框。
+     * 
+     * @return 选择的文件路径，如果没有选择则返回 null
+     */
+    public static String chooseFileDialog() {
+        JFileChooser jfc = new JFileChooser();
+        jfc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        jfc.setMultiSelectionEnabled(false);
+        
+        if (jfc.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
+            return null;
+        }
+        
+        return jfc.getSelectedFile().getAbsolutePath();
     }
 }

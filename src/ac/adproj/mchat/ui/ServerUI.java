@@ -85,7 +85,9 @@ public class ServerUI extends BaseChattingUI {
         String date = sdf.format(new Date());
 
         Handler fh = new FileHandler("%t/" + String.format("ACMCS_UDP_S_%s.log", date));
-        java.util.logging.Logger.getLogger("").addHandler(fh);
+        java.util.logging.Logger l = java.util.logging.Logger.getLogger("");
+        l.addHandler(fh);
+        l.addHandler(new ConsoleHandler());
 
         ServerUI ui = new ServerUI();
 
@@ -94,7 +96,7 @@ public class ServerUI extends BaseChattingUI {
 
         ServerConfigurationDialog.StatusWrapper cfd = ServerConfigurationDialog.showDialog();
         
-        if (cfd == null) {
+        if (cfd == null || cfd.getKeyFile() == null || cfd.getKeyFile().isEmpty()) {
             System.exit(-1);
         }
         

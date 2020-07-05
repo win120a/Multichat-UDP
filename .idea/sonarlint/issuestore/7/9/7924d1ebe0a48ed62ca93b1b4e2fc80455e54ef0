@@ -1,0 +1,8 @@
+
+Y
+java:S1128"=Remove this unused import 'java.util.logging.ConsoleHandler'.(±ìÍ 8ÇÑÇé±.
+G
+java:S1602E",Remove useless curly braces around statement(Äã”ÿÿÿÿÿÿ
+Q	java:S110*"<This class has 9 parents which is greater than 5 authorized.(çÐâ
+[
+java:S1128"9Remove this unused import 'java.util.logging.LogManager'.(›½ø·þÿÿÿÿ8²Çé±.

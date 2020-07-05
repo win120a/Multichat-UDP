@@ -67,10 +67,6 @@ public class MessageDistributor {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
 
-                    MDS_LOG.error(String.format("MDS - Interrupted by " +
-                            "other thread. [ThreadName: %s]",
-                            Thread.currentThread().getName()), e);
-
                     break;
                 } catch (Exception e) {
                     MDS_LOG.error(String.format("MDS - Other exception occurred. [ThreadName: %s]",

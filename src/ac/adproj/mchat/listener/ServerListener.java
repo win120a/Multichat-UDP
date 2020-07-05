@@ -19,6 +19,7 @@ package ac.adproj.mchat.listener;
 
 import ac.adproj.mchat.crypto.AESCryptoServiceImpl;
 import ac.adproj.mchat.crypto.ParamUtil;
+import ac.adproj.mchat.crypto.SymmetricCryptoService;
 import ac.adproj.mchat.handler.Handler;
 import ac.adproj.mchat.handler.MessageType;
 import ac.adproj.mchat.handler.ServerMessageHandler;
@@ -261,8 +262,6 @@ public class ServerListener implements Listener {
 
     @Override
     public void sendCommunicationData(String text, String uuid) {
-        final ByteBuffer bb = ByteBuffer.wrap(text.getBytes(StandardCharsets.UTF_8));
-
         if (uuid.equals(ProtocolStrings.BROADCAST_MESSAGE_UUID)) {
             // 服务器发出的消息。
             if (MessageType.INCOMING_MESSAGE.tokenize(text).get("uuid").equals(ProtocolStrings.BROADCAST_MESSAGE_UUID)) {
@@ -274,8 +273,29 @@ public class ServerListener implements Listener {
                     Thread.currentThread().interrupt();
                 }
             }
-
+            
+            String encryptedText = text;
+            
             for (User u : userManager.userProfileValueSet()) {
+                if (key != null) {
+                    byte[] ivBytes = ParamUtil.getIVFromString(u.getUuid(), 16);
+
+                    SymmetricCryptoService scs = new AESCryptoServiceImpl(key, ivBytes);
+
+                    String rawMessage = MessageType.INCOMING_MESSAGE.tokenize(text).get("messageText");
+
+                    try {
+                        String message = scs.encryptMessageToBase64String(rawMessage);
+                        encryptedText = MESSAGE_HEADER_LEFT_HALF + uuid + MESSAGE_HEADER_MIDDLE_HALF
+                                + MESSAGE_HEADER_RIGHT_HALF + message;
+
+                    } catch (InvalidKeyException e) {
+                        LOG.error("Invalid key!", e);
+                    }
+                }
+
+                final ByteBuffer bb = ByteBuffer.wrap(encryptedText.getBytes(StandardCharsets.UTF_8));
+
                 try {
                     bb.rewind();
 
@@ -287,6 +307,26 @@ public class ServerListener implements Listener {
                 }
             }
         } else {
+            if (key != null) {
+                byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
+
+                SymmetricCryptoService scs = new AESCryptoServiceImpl(key, ivBytes);
+
+                String rawMessage = MessageType.INCOMING_MESSAGE.tokenize(text).get("messageText");
+                String nickname = MessageType.INCOMING_MESSAGE.tokenize(text).get("uuid");
+
+                try {
+                    String message = scs.encryptMessageToBase64String(rawMessage);
+                    text = MESSAGE_HEADER_LEFT_HALF + nickname + MESSAGE_HEADER_MIDDLE_HALF
+                            + MESSAGE_HEADER_RIGHT_HALF + message;
+
+                } catch (InvalidKeyException e) {
+                    LOG.error("Invalid key!", e);
+                }
+            }
+            
+            final ByteBuffer bb = ByteBuffer.wrap(text.getBytes(StandardCharsets.UTF_8));
+
             try {
                 serverDatagramChannel.send(bb, userManager.lookup(uuid).getAddress());
             } catch (IOException e) {
@@ -294,6 +334,8 @@ public class ServerListener implements Listener {
             }
         }
     }
+    
+    
 
     @Override
     public void sendMessage(String message, String uuid) {

@@ -22,6 +22,7 @@ import ac.adproj.mchat.crypto.ParamUtil;
 import ac.adproj.mchat.crypto.SymmetricCryptoService;
 import ac.adproj.mchat.crypto.key.AESKeyServiceImpl;
 import ac.adproj.mchat.handler.ClientMessageHandler;
+import ac.adproj.mchat.handler.MessageType;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.service.CommonThreadPool;
@@ -39,8 +40,11 @@ import java.nio.channels.DatagramChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
+
+import javax.crypto.BadPaddingException;
 
 import static ac.adproj.mchat.model.ProtocolStrings.*;
 
@@ -204,16 +208,37 @@ public class ClientListener implements Listener {
                 while (buffer.hasRemaining()) {
                     sbuffer.append(StandardCharsets.UTF_8.decode(buffer));
                 }
+                
 
                 display.syncExec(() -> {
                     try {
-                        uiActions.accept(handler.handleMessage(sbuffer.toString(), socketChannel.getRemoteAddress()));
+                        String rawMessage = sbuffer.toString();
+                        byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
+                        
+                        if (key != null && MessageType.getMessageType(sbuffer.toString()) == MessageType.INCOMING_MESSAGE) {
+                            Map<String, String> tokenizeResult = MessageType.INCOMING_MESSAGE.tokenize(rawMessage);
+                            String messageUuid = tokenizeResult.get("uuid");
+                            String encryptedText = tokenizeResult.get("messageText");
+                            String decryptedMessage = new AESCryptoServiceImpl(key, ivBytes).decryptMessageFromBase64String(encryptedText);
+                            rawMessage = MESSAGE_HEADER_LEFT_HALF + messageUuid + ProtocolStrings.MESSAGE_HEADER_MIDDLE_HALF + MESSAGE_HEADER_RIGHT_HALF
+                                    + decryptedMessage;
+                        }
+                        uiActions.accept(handler.handleMessage(rawMessage, socketChannel.getRemoteAddress()));
                     } catch (IOException exc) {
                         LOG.error("Failed to get remote address.", exc);
 
                         display.syncExec(() -> {
                             MessageDialog.openError(shell, "出错", "读取服务器地址出错：" + exc.getMessage());
                         });
+                    } catch (InvalidKeyException | BadPaddingException e) {
+                        LOG.warn("Invaild Key! ", e);
+                        MessageDialog.openError(shell, "出错", "服务器密钥与客户端不匹配！");
+                        
+                        try {
+                            close();
+                        } catch (Exception ignored) {
+                            // ignored.
+                        }
                     }
                 });
 

@@ -311,3 +311,15 @@ A
 Multichat-UDP.iml,6\8\682eeacd341bb7a3e5bd65b16aedd7ec567dceb6
 `
 0src/ac/adproj/mchat/listener/ServerListener.java,7\4\7466bf7bef8e464d80388573fb07176536139b3f
+`
+0src/ac/adproj/mchat/crypto/key/package-info.java,8\2\82c71cede37afba2f56ab9344f462712635f1c8c
+\
+,src/ac/adproj/mchat/crypto/package-info.java,e\0\e0921f4f0aae8f177eae87265d94cbf237077d63
+]
+-src/ac/adproj/mchat/handler/package-info.java,8\b\8b337f59e235b2c8a5bb588e045d1f7b233324be
+]
+-src/ac/adproj/mchat/web/res/package-info.java,b\4\b436dfee4d1604cc97440d4a3003c6dc4442a30b
+Y
+)src/ac/adproj/mchat/web/package-info.java,c\d\cd6bdb45d655c8e67466270c6e7bb754fbacecf7
+[
++test/ac/adproj/mchat/test/package-info.java,a\f\af0df7deda4ad58fc4c56f9f97eedfd5c74b4196
