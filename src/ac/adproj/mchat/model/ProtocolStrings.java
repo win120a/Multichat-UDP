@@ -101,7 +101,7 @@ public final class ProtocolStrings {
     public static final String DEBUG_MODE_STRING = "/// DEBUG ///";
     
     /**
-     * 调试模式的信号字。目前是让服务器把用户档案打印出来。
+     * 服务器广播用 UUID。
      */
     public static final String BROADCAST_MESSAGE_UUID = "SERVER";
     
