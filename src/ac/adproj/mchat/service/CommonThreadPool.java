@@ -22,10 +22,10 @@ public class CommonThreadPool {
     private static BlockingQueue<Runnable> bq = new LinkedBlockingQueue<>(16);
     private static String comment = "";
     
-    private static final byte[] mutex = new byte[1];
+    private static final byte[] MUTEX = new byte[1];
 
     private static ThreadFactory threadFactory = r -> {
-        synchronized (mutex) {
+        synchronized (MUTEX) {
             threadNumber++;
             
             String threadName = "零散线程池线程 - #" + threadNumber + (comment.isEmpty() ? "" : " - " + comment);
@@ -56,7 +56,7 @@ public class CommonThreadPool {
      * @param stmt 说明文字
      */
     public static synchronized void execute(Runnable r, String stmt) {
-        synchronized (mutex) {
+        synchronized (MUTEX) {
             comment = stmt;
         }
         

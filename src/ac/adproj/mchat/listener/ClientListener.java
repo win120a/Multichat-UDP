@@ -23,6 +23,7 @@ import ac.adproj.mchat.crypto.SymmetricCryptoService;
 import ac.adproj.mchat.crypto.key.AESKeyServiceImpl;
 import ac.adproj.mchat.handler.ClientMessageHandler;
 import ac.adproj.mchat.handler.MessageType;
+import ac.adproj.mchat.handler.MessageTypeConstants;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.service.CommonThreadPool;
@@ -46,6 +47,7 @@ import java.util.function.Consumer;
 
 import javax.crypto.BadPaddingException;
 
+import static ac.adproj.mchat.handler.MessageType.INCOMING_MESSAGE;
 import static ac.adproj.mchat.handler.MessageType.NOTIFY_LOGOFF;
 import static ac.adproj.mchat.util.CollectionUtils.mapOf;
 import static ac.adproj.mchat.model.ProtocolStrings.*;
@@ -175,7 +177,7 @@ public class ClientListener implements Listener {
         try {
             socketChannel.connect(new InetSocketAddress(ia, SERVER_PORT));
 
-            Map<String, String> info = mapOf("uuid", uuid, "name", username);
+            Map<String, String> info = mapOf(MessageTypeConstants.UUID, uuid, MessageTypeConstants.USERNAME, username);
 
             String greetMessage = MessageType.REGISTER.generateProtocolMessage(info);
             final ByteBuffer greetBuffer = ByteBuffer.wrap(greetMessage.getBytes());
@@ -212,12 +214,16 @@ public class ClientListener implements Listener {
 
             if (key != null && MessageType.getMessageType(rawMessage) == MessageType.INCOMING_MESSAGE) {
                 Map<String, String> tokenizeResult = MessageType.INCOMING_MESSAGE.tokenize(rawMessage);
-                String messageUuid = tokenizeResult.get("uuid");
-                String encryptedText = tokenizeResult.get("messageText");
+                String messageUuid = tokenizeResult.get(MessageTypeConstants.UUID);
+                String encryptedText = tokenizeResult.get(MessageTypeConstants.MESSAGE_TEXT);
                 String decryptedMessage = new AESCryptoServiceImpl(key, ivBytes).decryptMessageFromBase64String(encryptedText);
-                rawMessage = MESSAGE_HEADER_LEFT_HALF + messageUuid + ProtocolStrings.MESSAGE_HEADER_MIDDLE_HALF + MESSAGE_HEADER_RIGHT_HALF
-                        + decryptedMessage;
+
+                Map<String, String> infoMap = mapOf(MessageTypeConstants.UUID, messageUuid,
+                                                    MessageTypeConstants.MESSAGE_TEXT, decryptedMessage);
+
+                rawMessage = INCOMING_MESSAGE.generateProtocolMessage(infoMap);
             }
+
             return rawMessage;
         } catch (InvalidKeyException | BadPaddingException e) {
             LOG.warn("Invalid Key! ", e);

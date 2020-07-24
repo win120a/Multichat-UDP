@@ -53,13 +53,15 @@ public class ServerMessageHandler implements Handler {
             case REGISTER:
                 // 用户注册
                 Map<String, String> data = REGISTER.tokenize(message);
-                User userObject = new User(data.get("uuid"), address, data.get("name"));
+                User userObject = new User(data.get(MessageTypeConstants.UUID),
+                                            address, data.get(MessageTypeConstants.USERNAME));
 
                 userManager.register(userObject);
 
                 LOG.debug("[UDP] Registering, UUID = {}, Nickname = {}", userObject.getUuid(), userObject.getName());
 
-                return "Client: " + data.get("uuid") + " (" + data.get("name") + ") Connected.";
+                return "Client: " + data.get(MessageTypeConstants.UUID) +
+                            " (" + data.get(MessageTypeConstants.USERNAME) + ") Connected.";
 
             case DEBUG:
                 // 调试模式
@@ -68,7 +70,7 @@ public class ServerMessageHandler implements Handler {
 
             case NOTIFY_LOGOFF:
                 // 客户端请求注销
-                SoftReference<String> targetUuid = new SoftReference<>(NOTIFY_LOGOFF.tokenize(message).get("uuid"));
+                SoftReference<String> targetUuid = new SoftReference<>(NOTIFY_LOGOFF.tokenize(message).get(MessageTypeConstants.UUID));
 
                 try {
                     LOG.debug("[UDP] Disconnecting, UUID = {}.", targetUuid.get());
@@ -88,8 +90,8 @@ public class ServerMessageHandler implements Handler {
                     return "";
                 }
 
-                String fromUuid = msgData.get("uuid");
-                String messageText = msgData.get("messageText");
+                String fromUuid = msgData.get(MessageTypeConstants.UUID);
+                String messageText = msgData.get(MessageTypeConstants.MESSAGE_TEXT);
 
                 if (!userManager.containsUuid(fromUuid)) {
                     // 不接收没有注册机器的任何信息

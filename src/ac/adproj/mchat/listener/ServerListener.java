@@ -115,7 +115,6 @@ public class ServerListener implements Listener {
      * 
      * @param bb      写入到的字节缓冲区
      * @param handler 协议消息处理器
-     * @param result  读取的字节数，-1 为结束
      * @param address 客户端地址
      */
     private void readMessage(ByteBuffer bb, Handler handler, SocketAddress address) {
@@ -264,7 +263,7 @@ public class ServerListener implements Listener {
     public void sendCommunicationData(String text, String uuid) {
         if (uuid.equals(ProtocolStrings.BROADCAST_MESSAGE_UUID)) {
             // 服务器发出的消息。
-            if (MessageType.INCOMING_MESSAGE.tokenize(text).get("uuid").equals(ProtocolStrings.BROADCAST_MESSAGE_UUID)) {
+            if (MessageType.INCOMING_MESSAGE.tokenize(text).get(MessageTypeConstants.UUID).equals(ProtocolStrings.BROADCAST_MESSAGE_UUID)) {
                 try {
                     // 同时更新 UI 和 WebSocket
                     MessageDistributor.getInstance().sendRawProtocolMessage(text);

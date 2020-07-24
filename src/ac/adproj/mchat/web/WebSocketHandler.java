@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import ac.adproj.mchat.handler.MessageTypeConstants;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 
@@ -133,16 +134,16 @@ public class WebSocketHandler implements WebSocketListener {
             case REGISTER:
                 Map<String, String> result = REGISTER.tokenize(message);
 
-                if (UserManager.getInstance().reserveName(result.get("name"))) {
-                    nameBindings.put(result.get("uuid"), result.get("name"));
+                if (UserManager.getInstance().reserveName(result.get(MessageTypeConstants.UUID))) {
+                    nameBindings.put(result.get(MessageTypeConstants.UUID), result.get(MessageTypeConstants.USERNAME));
                 }
 
-                nickname = result.get("name");
+                nickname = result.get(MessageTypeConstants.USERNAME);
 
                 break;
 
             case USERNAME_QUERY_REQUEST:
-                String name = USERNAME_QUERY_REQUEST.tokenize(message).get("username");
+                String name = USERNAME_QUERY_REQUEST.tokenize(message).get(MessageTypeConstants.USERNAME);
 
                 try {
                     session.getRemote()
