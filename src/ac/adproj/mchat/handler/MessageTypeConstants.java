@@ -18,6 +18,10 @@
 package ac.adproj.mchat.handler;
 
 public class MessageTypeConstants {
+    private MessageTypeConstants() {
+        throw new UnsupportedOperationException("NO MessageTypeConstants instance for you! ");
+    }
+
     public static final String UUID = "uuid";
     public static final String MESSAGE_TEXT = "messageText";
     public static final String USERNAME = "username";

@@ -358,7 +358,7 @@ public class ServerListener implements Listener {
      * @throws IOException 如果IO出错
      */
     public void logoffAll() throws IOException {
-        userManager.userProfileValueSet().forEach((v) -> {
+        userManager.userProfileValueSet().forEach(v -> {
             try {
                 final ByteBuffer bb = ByteBuffer
                         .wrap((ProtocolStrings.NOTIFY_LOGOFF_HEADER + "SERVER").getBytes(StandardCharsets.UTF_8));

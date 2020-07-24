@@ -17,13 +17,11 @@
 
 package ac.adproj.mchat.handler;
 
-import ac.adproj.mchat.model.ProtocolStrings;
-
 import java.util.Map;
 
 import static ac.adproj.mchat.model.ProtocolStrings.*;
-import static ac.adproj.mchat.util.CollectionUtils.mapOf;
 import static ac.adproj.mchat.util.CollectionUtils.emptyMap;
+import static ac.adproj.mchat.util.CollectionUtils.mapOf;
 
 /**
  * 消息类型枚举和消息元素分离器类。

@@ -17,22 +17,19 @@
 
 package ac.adproj.mchat.ui;
 
-import static ac.adproj.mchat.ui.CommonDialogs.errorDialog;
-import static ac.adproj.mchat.ui.CommonDialogs.inputDialog;
+import ac.adproj.mchat.listener.ClientListener;
+import org.eclipse.swt.widgets.Display;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
-import java.util.logging.LogManager;
 
-import org.eclipse.swt.widgets.Display;
-
-import ac.adproj.mchat.listener.ClientListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static ac.adproj.mchat.ui.CommonDialogs.errorDialog;
+import static ac.adproj.mchat.ui.CommonDialogs.inputDialog;
 
 /**
  * 客户端界面。
@@ -66,9 +63,7 @@ public class ClientUI extends BaseChattingUI {
         } catch (IOException e) {
             LOG.error("Logoff failed.", e);
 
-            getDisplay().syncExec(() -> {
-                CommonDialogs.errorDialog("注销异常：" + e.getMessage());
-            });
+            getDisplay().syncExec(() -> CommonDialogs.errorDialog("注销异常：" + e.getMessage()));
         }
         
         send.setEnabled(false);
