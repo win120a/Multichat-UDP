@@ -17,11 +17,13 @@
 
 package ac.adproj.mchat.handler;
 
-import java.util.Collections;
-import java.util.HashMap;
+import ac.adproj.mchat.model.ProtocolStrings;
+
 import java.util.Map;
 
-import ac.adproj.mchat.model.ProtocolStrings;
+import static ac.adproj.mchat.model.ProtocolStrings.*;
+import static ac.adproj.mchat.util.CollectionUtils.mapOf;
+import static ac.adproj.mchat.util.CollectionUtils.emptyMap;
 
 /**
  * 消息类型枚举和消息元素分离器类。
@@ -33,37 +35,138 @@ public enum MessageType {
     /**
      * 用户注册或连接上
      */
-    REGISTER,
+    REGISTER {
+        @Override
+        public String generateProtocolMessage(Map<String, String> elements) {
+            String message = CONNECTING_GREET_LEFT_HALF;
+            message += elements.get(MessageTypeConstants.UUID);
+            message += CONNECTING_GREET_MIDDLE_HALF;
+            message += elements.get(MessageTypeConstants.USERNAME);
+            message += CONNECTING_GREET_RIGHT_HALF;
+
+            return message;
+        }
+
+        @Override
+        public Map<String, String> tokenize(String message) {
+            String[] data = message.replace(CONNECTING_GREET_LEFT_HALF, "")
+                    .replace(CONNECTING_GREET_RIGHT_HALF, "").split(CONNECTING_GREET_MIDDLE_HALF);
+
+            String uuid = data[0];
+            String name = data[1];
+
+            return mapOf(MessageTypeConstants.UUID, uuid, MessageTypeConstants.USERNAME, name);
+        }
+    },
 
     /**
      * 用户注销或断开
      */
-    LOGOFF,
+    NOTIFY_LOGOFF {
+        @Override
+        public String generateProtocolMessage(Map<String, String> elements) {
+            return NOTIFY_LOGOFF_HEADER + elements.get("uuid");
+        }
+
+        @Override
+        public Map<String, String> tokenize(String message) {
+            String targetUuid = message.replace(NOTIFY_LOGOFF_HEADER, "");
+
+            return mapOf(MessageTypeConstants.UUID, targetUuid);
+        }
+    },
 
     /**
      * 用户消息
      */
-    INCOMING_MESSAGE,
+    INCOMING_MESSAGE {
+        @Override
+        public String generateProtocolMessage(Map<String, String> elements) {
+            String message = MESSAGE_HEADER_LEFT_HALF;
+            message += elements.get(MessageTypeConstants.UUID);
+            message += MESSAGE_HEADER_MIDDLE_HALF;
+            message += MESSAGE_HEADER_RIGHT_HALF + elements.get(MessageTypeConstants.MESSAGE_TEXT);
+
+            return message;
+        }
+
+        @Override
+        public Map<String, String> tokenize(String message) {
+            String[] msgData = message.replace(MESSAGE_HEADER_LEFT_HALF, "")
+                    .replace(MESSAGE_HEADER_RIGHT_HALF, "").split(MESSAGE_HEADER_MIDDLE_HALF);
+
+            final int validDataArrayLength = 2;
+
+            if (msgData.length < validDataArrayLength) {
+                return emptyMap();
+            }
+
+            String fromUuid = msgData[0];
+            String messageText = msgData[1];
+
+            return mapOf(MessageTypeConstants.UUID, fromUuid, MessageTypeConstants.MESSAGE_TEXT, messageText);
+        }
+    },
 
     /**
      * 调试模式
      */
-    DEBUG,
+    DEBUG {
+        @Override
+        public String generateProtocolMessage(Map<String, String> elements) {
+            return "";
+        }
+
+        @Override
+        public Map<String, String> tokenize(String message) {
+            return mapOf();
+        }
+    },
 
     /**
      * 用户名查重请求消息
      */
-    USERNAME_QUERY_REQUEST,
+    USERNAME_QUERY_REQUEST {
+        @Override
+        public String generateProtocolMessage(Map<String, String> elements) {
+            return CHECK_DUPLICATE_REQUEST_HEADER + elements.get(MessageTypeConstants.USERNAME);
+        }
+
+        @Override
+        public Map<String, String> tokenize(String message) {
+            return mapOf(MessageTypeConstants.USERNAME, message.replace(CHECK_DUPLICATE_REQUEST_HEADER, ""));
+        }
+    },
 
     /**
      * 用于向客户端通知非法密钥的信号字
      */
-    INVALID_KEY,
+    INVALID_KEY {
+        @Override
+        public String generateProtocolMessage(Map<String, String> elements) {
+            return INVALID_KEY_NOTIFYING_STRING_HEADER + elements.get(MessageTypeConstants.UUID);
+        }
+
+        @Override
+        public Map<String, String> tokenize(String message) {
+            return mapOf(MessageTypeConstants.UUID, message.replace(INVALID_KEY_NOTIFYING_STRING_HEADER, ""));
+        }
+    },
     
     /**
      * 未知
      */
-    UNKNOWN;
+    UNKNOWN {
+        @Override
+        public String generateProtocolMessage(Map<String, String> elements) {
+            return "";
+        }
+
+        @Override
+        public Map<String, String> tokenize(String message) {
+            return mapOf();
+        }
+    };
     
     /**
      * 获取消息类型（对象）。
@@ -72,21 +175,23 @@ public enum MessageType {
      * @return 对应的 MessageType 对象。
      */
     public static MessageType getMessageType(String message) {
-        if (message.startsWith(ProtocolStrings.CONNECTING_GREET_LEFT_HALF)) {
+        if (message.startsWith(CONNECTING_GREET_LEFT_HALF)) {
             return REGISTER;
-        } else if (message.startsWith(ProtocolStrings.DEBUG_MODE_STRING)) {
+        } else if (message.startsWith(DEBUG_MODE_STRING)) {
             return DEBUG;
-        } else if (message.startsWith(ProtocolStrings.NOTIFY_LOGOFF_HEADER)) {
-            return LOGOFF;
-        } else if (message.startsWith(ProtocolStrings.MESSAGE_HEADER_LEFT_HALF)) {
+        } else if (message.startsWith(NOTIFY_LOGOFF_HEADER)) {
+            return NOTIFY_LOGOFF;
+        } else if (message.startsWith(MESSAGE_HEADER_LEFT_HALF)) {
             return INCOMING_MESSAGE;
-        } else if (message.startsWith(ProtocolStrings.CHECK_DUPLICATE_REQUEST_HEADER)) {
+        } else if (message.startsWith(CHECK_DUPLICATE_REQUEST_HEADER)) {
             return USERNAME_QUERY_REQUEST;
-        } else if (message.startsWith(ProtocolStrings.INVALID_KEY_NOTIFYING_STRING_HEADER)) {
+        } else if (message.startsWith(INVALID_KEY_NOTIFYING_STRING_HEADER)) {
             return INVALID_KEY;
         }
         return MessageType.UNKNOWN;
     }
+
+    public abstract String generateProtocolMessage(Map<String, String> elements);
 
     /**
      * 消息元素分离方法。
@@ -94,88 +199,5 @@ public enum MessageType {
      * @param message 协议消息
      * @return 分离后的消息元素。
      */
-    public Map<String, String> tokenize(String message) {
-        Map<String, String> ret = null;
-
-        switch (this) {
-            case REGISTER:
-                String[] data = message.replace(ProtocolStrings.CONNECTING_GREET_LEFT_HALF, "")
-                        .replace(ProtocolStrings.CONNECTING_GREET_RIGHT_HALF, "").split(ProtocolStrings.CONNECTING_GREET_MIDDLE_HALF);
-
-                String uuid = data[0];
-                String name = data[1];
-
-                ret = of("uuid", uuid, "name", name);
-
-                break;
-
-            case LOGOFF:
-                String targetUuid = message.replace(ProtocolStrings.NOTIFY_LOGOFF_HEADER, "");
-
-                ret = of("uuid", targetUuid);
-                
-                break;
-
-            case INCOMING_MESSAGE:
-                String[] msgData = message.replace(ProtocolStrings.MESSAGE_HEADER_LEFT_HALF, "")
-                        .replace(ProtocolStrings.MESSAGE_HEADER_RIGHT_HALF, "").split(ProtocolStrings.MESSAGE_HEADER_MIDDLE_HALF);
-
-                final int vaildDataArrayLength = 2;
-
-                if (msgData.length < vaildDataArrayLength) {
-                    return Collections.emptyMap();
-                }
-
-                String fromUuid = msgData[0];
-                String messageText = msgData[1];
-                
-                ret = of("uuid", fromUuid, "messageText", messageText);
-                
-                break;
-            case USERNAME_QUERY_REQUEST:
-                ret = of("username", message.replace(ProtocolStrings.CHECK_DUPLICATE_REQUEST_HEADER, ""));
-                break;
-            case UNKNOWN:
-            default:
-                ret = Collections.emptyMap();
-                break;
-        }
-
-        return ret;
-    }
-
-    /**
-     * 根据一对参数返回只读 Map。（类似于 Java 9 中 Map.of 方法的作用）
-     * @param <K> 键类型
-     * @param <V> 值类型
-     * @param k1 第一个键 
-     * @param v1 第一个值
-     * @return 内含 [k1, v1] 一个元素的只读的 Map
-     */
-    private <K, V> Map<K, V> of(K k1, V v1) {
-        HashMap<K, V> hm = new HashMap<>(1);
-
-        hm.put(k1, v1);
-
-        return Collections.unmodifiableMap(hm);
-    }
-
-    /**
-     * 根据两对参数返回只读 Map。（类似于 Java 9 中 Map.of 方法的作用）
-     * @param <K> 键类型
-     * @param <V> 值类型
-     * @param k1 第一个键 
-     * @param v1 第一个值
-     * @param k2 第二个键 
-     * @param v2 第二个值
-     * @return 内含 [k1, v1], [k2, v2] 两个元素的只读的 Map
-     */
-    private <K, V> Map<K, V> of(K k1, V v1, K k2, V v2) {
-        HashMap<K, V> hm = new HashMap<>(2);
-
-        hm.put(k1, v1);
-        hm.put(k2, v2);
-
-        return Collections.unmodifiableMap(hm);
-    }
+    public abstract Map<String, String> tokenize(String message);
 }

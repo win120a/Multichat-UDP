@@ -52,7 +52,7 @@ public class ClientMessageHandler implements Handler {
                 message = "";
                 break;
 
-            case LOGOFF:
+            case NOTIFY_LOGOFF:
                 logoffCallback.accept(true);
                 message = "Server closed the connection.";
                 break;

@@ -46,6 +46,8 @@ import java.util.function.Consumer;
 
 import javax.crypto.BadPaddingException;
 
+import static ac.adproj.mchat.handler.MessageType.NOTIFY_LOGOFF;
+import static ac.adproj.mchat.util.CollectionUtils.mapOf;
 import static ac.adproj.mchat.model.ProtocolStrings.*;
 
 /**
@@ -173,7 +175,9 @@ public class ClientListener implements Listener {
         try {
             socketChannel.connect(new InetSocketAddress(ia, SERVER_PORT));
 
-            String greetMessage = CONNECTING_GREET_LEFT_HALF + uuid + CONNECTING_GREET_MIDDLE_HALF + username;
+            Map<String, String> info = mapOf("uuid", uuid, "name", username);
+
+            String greetMessage = MessageType.REGISTER.generateProtocolMessage(info);
             final ByteBuffer greetBuffer = ByteBuffer.wrap(greetMessage.getBytes());
 
             socketChannel.write(greetBuffer);
@@ -188,6 +192,46 @@ public class ClientListener implements Listener {
         CommonThreadPool.execute(() -> readMessage(shell, uiActions, handler));
     }
 
+    private String encryptMessage(String message) {
+        byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
+
+        SymmetricCryptoService scs = new AESCryptoServiceImpl(key, ivBytes);
+
+        try {
+            return scs.encryptMessageToBase64String(message);
+        } catch (InvalidKeyException e) {
+            LOG.error("Invalid key!", e);
+        }
+
+        return "";
+    }
+
+    private String decryptMessage(String rawMessage) {
+        try {
+            byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
+
+            if (key != null && MessageType.getMessageType(rawMessage) == MessageType.INCOMING_MESSAGE) {
+                Map<String, String> tokenizeResult = MessageType.INCOMING_MESSAGE.tokenize(rawMessage);
+                String messageUuid = tokenizeResult.get("uuid");
+                String encryptedText = tokenizeResult.get("messageText");
+                String decryptedMessage = new AESCryptoServiceImpl(key, ivBytes).decryptMessageFromBase64String(encryptedText);
+                rawMessage = MESSAGE_HEADER_LEFT_HALF + messageUuid + ProtocolStrings.MESSAGE_HEADER_MIDDLE_HALF + MESSAGE_HEADER_RIGHT_HALF
+                        + decryptedMessage;
+            }
+            return rawMessage;
+        } catch (InvalidKeyException | BadPaddingException e) {
+            LOG.warn("Invalid Key! ", e);
+
+            try {
+                close();
+            } catch (Exception ignored) {
+                // ignored.
+            }
+        }
+
+        return "";
+    }
+
     private void readMessage(Shell shell, Consumer<String> uiActions, ClientMessageHandler handler) {
         while (socketChannel.isOpen()) {
             final ByteBuffer buffer = ByteBuffer.allocate(ProtocolStrings.BUFFER_SIZE);
@@ -195,9 +239,7 @@ public class ClientListener implements Listener {
             Display display = shell.getDisplay();
 
             try {
-                int result = socketChannel.read(buffer);
-
-                if (result == -1) {
+                if (socketChannel.read(buffer) == -1) {
                     return;
                 }
 
@@ -208,21 +250,11 @@ public class ClientListener implements Listener {
                 while (buffer.hasRemaining()) {
                     sbuffer.append(StandardCharsets.UTF_8.decode(buffer));
                 }
-                
 
                 display.syncExec(() -> {
                     try {
-                        String rawMessage = sbuffer.toString();
-                        byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
-                        
-                        if (key != null && MessageType.getMessageType(sbuffer.toString()) == MessageType.INCOMING_MESSAGE) {
-                            Map<String, String> tokenizeResult = MessageType.INCOMING_MESSAGE.tokenize(rawMessage);
-                            String messageUuid = tokenizeResult.get("uuid");
-                            String encryptedText = tokenizeResult.get("messageText");
-                            String decryptedMessage = new AESCryptoServiceImpl(key, ivBytes).decryptMessageFromBase64String(encryptedText);
-                            rawMessage = MESSAGE_HEADER_LEFT_HALF + messageUuid + ProtocolStrings.MESSAGE_HEADER_MIDDLE_HALF + MESSAGE_HEADER_RIGHT_HALF
-                                    + decryptedMessage;
-                        }
+                        String rawMessage = decryptMessage(sbuffer.toString());
+
                         uiActions.accept(handler.handleMessage(rawMessage, socketChannel.getRemoteAddress()));
                     } catch (IOException exc) {
                         LOG.error("Failed to get remote address.", exc);
@@ -230,15 +262,6 @@ public class ClientListener implements Listener {
                         display.syncExec(() -> {
                             MessageDialog.openError(shell, "出错", "读取服务器地址出错：" + exc.getMessage());
                         });
-                    } catch (InvalidKeyException | BadPaddingException e) {
-                        LOG.warn("Invaild Key! ", e);
-                        MessageDialog.openError(shell, "出错", "服务器密钥与客户端不匹配！");
-                        
-                        try {
-                            close();
-                        } catch (Exception ignored) {
-                            // ignored.
-                        }
                     }
                 });
 
@@ -295,18 +318,11 @@ public class ClientListener implements Listener {
             return;
         }
 
-        // IV length = 16
-        byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
-
-        SymmetricCryptoService scs = new AESCryptoServiceImpl(key, ivBytes);
-
-        try {
-            message = scs.encryptMessageToBase64String(message);
-        } catch (InvalidKeyException e) {
-            LOG.error("Invalid key!", e);
+        if (key != null) {
+            sendMessage(encryptMessage(message), uuid);
+        } else {
+            sendMessage(message, uuid);
         }
-
-        sendMessage(message, uuid);
     }
 
     @Override
@@ -323,7 +339,7 @@ public class ClientListener implements Listener {
      */
     public void logoff() throws IOException {
         if (isConnected()) {
-            sendCommunicationData(NOTIFY_LOGOFF_HEADER + uuid, uuid);
+            sendCommunicationData(NOTIFY_LOGOFF.generateProtocolMessage(mapOf("uuid", uuid)), uuid);
             socketChannel.close();
             socketChannel = null;
         }

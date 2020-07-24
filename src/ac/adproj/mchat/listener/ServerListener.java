@@ -22,6 +22,7 @@ import ac.adproj.mchat.crypto.ParamUtil;
 import ac.adproj.mchat.crypto.SymmetricCryptoService;
 import ac.adproj.mchat.handler.Handler;
 import ac.adproj.mchat.handler.MessageType;
+import ac.adproj.mchat.handler.MessageTypeConstants;
 import ac.adproj.mchat.handler.ServerMessageHandler;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.ProtocolStrings;
@@ -51,6 +52,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 import static ac.adproj.mchat.model.ProtocolStrings.*;
+import static ac.adproj.mchat.util.CollectionUtils.mapOf;
 
 /**
  * 聊天服务器 UDP 协议通信类。
@@ -116,11 +118,7 @@ public class ServerListener implements Listener {
      * @param result  读取的字节数，-1 为结束
      * @param address 客户端地址
      */
-    private void readMessage(ByteBuffer bb, Handler handler, Integer result, SocketAddress address) {
-
-        if (result == -1) {
-            return;
-        }
+    private void readMessage(ByteBuffer bb, Handler handler, SocketAddress address) {
 
         bb.flip();
 
@@ -134,8 +132,8 @@ public class ServerListener implements Listener {
 
         if (key != null && MessageType.getMessageType(rawMessage) == MessageType.INCOMING_MESSAGE) {
             Map<String, String> tokenizeResult = MessageType.INCOMING_MESSAGE.tokenize(rawMessage);
-            String uuid = tokenizeResult.get("uuid");
-            String encryptedText = tokenizeResult.get("messageText");
+            String uuid = tokenizeResult.get(MessageTypeConstants.UUID);
+            String encryptedText = tokenizeResult.get(MessageTypeConstants.MESSAGE_TEXT);
 
             try {
                 byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
@@ -143,12 +141,18 @@ public class ServerListener implements Listener {
                 // << MESSAGE >>> <<<< (UUID) >>>> << MESSAGE >> (messageContent)
                 
                 String decryptedMessage = new AESCryptoServiceImpl(key, ivBytes).decryptMessageFromBase64String(encryptedText);
-                rawMessage = MESSAGE_HEADER_LEFT_HALF + uuid + ProtocolStrings.MESSAGE_HEADER_MIDDLE_HALF + MESSAGE_HEADER_RIGHT_HALF
-                        + decryptedMessage;
+
+                Map<String, String> info = mapOf(MessageTypeConstants.UUID,
+                                                uuid,
+                                                MessageTypeConstants.MESSAGE_TEXT,
+                                                decryptedMessage);
+
+                rawMessage = MessageType.INCOMING_MESSAGE.generateProtocolMessage(info);
                 
             } catch (InvalidKeyException e) {
                 LOG.warn("Invalid Key! ");
-                sendCommunicationData(ProtocolStrings.INVALID_KEY_NOTIFYING_STRING_HEADER + uuid, uuid);
+                String ps = MessageType.INVALID_KEY.generateProtocolMessage(mapOf(MessageTypeConstants.UUID, uuid));
+                sendCommunicationData(ps, uuid);
             } catch (BadPaddingException e) {
                 bb.clear();
                 LOG.warn(String.format("Incorrect Key: [UUID = %s]", uuid), e);
@@ -218,7 +222,7 @@ public class ServerListener implements Listener {
                 threadPool.execute(() -> {
                     ll.add(address);
 
-                    readMessage(bb, handler, 0, ll.get(0));
+                    readMessage(bb, handler, ll.get(0));
 
                     ll.clear();
                 });
@@ -237,7 +241,7 @@ public class ServerListener implements Listener {
                     }
                 }
 
-                if (sr != null) {
+                if (sr != null && sr.get() != null) {
                     userManager.deleteUserProfile(sr.get().getUuid());
 
                     LOG.warn(String.format("Got exception when receiving message. UUID: %s", sr.get().getUuid()), exc);
@@ -253,11 +257,7 @@ public class ServerListener implements Listener {
 
     @Override
     public boolean isConnected() {
-        if (userManager.isEmptyUserProfile()) {
-            return false;
-        } else {
-            return true;
-        }
+        return !userManager.isEmptyUserProfile();
     }
 
     @Override

@@ -17,11 +17,6 @@
 
 package ac.adproj.mchat.handler;
 
-import java.io.IOException;
-import java.lang.ref.SoftReference;
-import java.net.SocketAddress;
-import java.util.Map;
-
 import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.model.User;
@@ -29,19 +24,23 @@ import ac.adproj.mchat.service.UserManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.lang.ref.SoftReference;
+import java.net.SocketAddress;
+import java.util.Map;
+
 import static ac.adproj.mchat.handler.MessageType.*;
 
 /**
  * 服务端消息处理类。
- * 
+ *
  * @author Andy Cheung
  * @since 2020/4/26
  */
 public class ServerMessageHandler implements Handler {
-    private UserManager userManager = UserManager.getInstance();
-    private ServerListener listener;
-
     private static final Logger LOG = LoggerFactory.getLogger(ServerMessageHandler.class);
+    private final UserManager userManager = UserManager.getInstance();
+    private final ServerListener listener;
 
     public ServerMessageHandler(ServerListener listener) {
         super();
@@ -67,9 +66,9 @@ public class ServerMessageHandler implements Handler {
                 LOG.debug("[UDP] Users: {}", userManager);
                 return "";
 
-            case LOGOFF:
+            case NOTIFY_LOGOFF:
                 // 客户端请求注销
-                SoftReference<String> targetUuid = new SoftReference<>(LOGOFF.tokenize(message).get("uuid"));
+                SoftReference<String> targetUuid = new SoftReference<>(NOTIFY_LOGOFF.tokenize(message).get("uuid"));
 
                 try {
                     LOG.debug("[UDP] Disconnecting, UUID = {}.", targetUuid.get());
@@ -82,13 +81,13 @@ public class ServerMessageHandler implements Handler {
 
             case INCOMING_MESSAGE:
                 // 收到消息
-                
+
                 Map<String, String> msgData = INCOMING_MESSAGE.tokenize(message);
-                
-                if (msgData.size() == 0) { 
+
+                if (msgData.size() == 0) {
                     return "";
                 }
-                
+
                 String fromUuid = msgData.get("uuid");
                 String messageText = msgData.get("messageText");
 
