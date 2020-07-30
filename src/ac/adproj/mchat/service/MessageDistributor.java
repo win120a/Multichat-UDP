@@ -23,12 +23,15 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import ac.adproj.mchat.handler.MessageType;
+import ac.adproj.mchat.handler.MessageTypeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static ac.adproj.mchat.handler.MessageTypeConstants.*;
+
 /**
- * 消息分派器。
- * 
+ * Message Distributor (like MQ).
+ *
  * @author Andy Cheung
  * @since 2020/5/24
  */
@@ -39,21 +42,41 @@ public class MessageDistributor {
         instance = new MessageDistributor();
     }
 
-
     private MessageDistributor() {
         uiMessages = new LinkedBlockingQueue<>();
         callbacks = new LinkedList<>();
-        CommonThreadPool.execute(new MessageDistributingService(), "消息分发服务");
+        CommonThreadPool.execute(new MessageDistributingService(), "Message Distributing Service");
     }
-    
+
+    /**
+     * Obtain the only instance of MessageDistributor.
+     *
+     * @return The only instance.
+     */
     public static MessageDistributor getInstance() {
         return instance;
     }
 
+    /**
+     * UI messages that are going to send.
+     */
     private BlockingQueue<String> uiMessages;
+
+    /**
+     * Subscriber callbacks.
+     */
     private LinkedList<SubscriberCallback> callbacks;
+
+    /**
+     * Logger of Message Distributing service.
+     */
     private static final Logger MDS_LOG = LoggerFactory.getLogger(MessageDistributingService.class);
 
+    /**
+     * Message Distributing service, which aims to send message to subscribers.
+     *
+     * @implNote It's a runnable that will be executed by separate thread.
+     */
     private class MessageDistributingService implements Runnable {
         @Override
         public void run() {
@@ -77,33 +100,44 @@ public class MessageDistributor {
     }
     
     /**
-     * 定义收到信息后的回调方法。
+     * Represents the callback method when MessageDistributingService receives message.
      * 
      * @author Andy Cheung
      * @since 2020.5.24
      */
     public interface SubscriberCallback {
         /**
-         * 收到信息后的回调方法。
-         * @param uiMessage 处理后的，对用户友好的信息。
+         * Callback method when receives message.
+         * @param uiMessage The UI message that shows to user.
          */
         void onMessageReceived(String uiMessage);
     }
 
+    /**
+     * Directly sends UI message to subscribers.
+     * @param message The UI message.
+     * @throws InterruptedException If the process of putting message into queue is interrupted.
+     */
     public void sendUiMessage(String message) throws InterruptedException {
         uiMessages.put(message);
     }
     
     /**
-     * 直接将协议消息（只限 INCOMING_MESSAGE 类型的）转化为 UI 消息的快捷方法。
-     * @param message “消息”类协议消息
-     * @throws InterruptedException 如果操作被迫中断
+     * Shortcut of converting the "INCOMING_MESSAGE" to UI message, and send the message to subscribers.
+     *
+     * @param message Raw protocol message whose type is "INCOMING_MESSAGE".
+     * @throws InterruptedException If the process of putting message into queue is interrupted.
      */
     public void sendRawProtocolMessage(String message) throws InterruptedException {
         Map<String, String> tresult = MessageType.INCOMING_MESSAGE.tokenize(message);
-        uiMessages.put(tresult.get("uuid") + ": " + tresult.get("messageText"));
+        uiMessages.put(tresult.get(UUID) + ": " + tresult.get(MESSAGE_TEXT));
     }
-    
+
+    /**
+     * Register the subscriber callback to this Message Distributor.
+     *
+     * @param callback The callback method when receives message.
+     */
     public void registerSubscriber(SubscriberCallback callback) {
         callbacks.add(callback);
     }

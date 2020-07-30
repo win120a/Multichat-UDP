@@ -32,7 +32,7 @@ import java.util.Map;
 import static ac.adproj.mchat.handler.MessageType.*;
 
 /**
- * 服务端消息处理类。
+ * Server message handler.
  *
  * @author Andy Cheung
  * @since 2020/4/26

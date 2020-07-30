@@ -20,18 +20,22 @@ package ac.adproj.mchat.handler;
 import java.net.SocketAddress;
 
 /**
- * 消息处理器接口。
- * 
+ * Interface that represents a protocol message handler.
+ *
  * @author Andy Cheung
  * @since 2020/4/26
  */
 public interface Handler {
+
     /**
-     * 处理协议消息。
-     * 
-     * @param message 原始协议消息
-     * @param address 对方地址
-     * @return 在文本框显示的文字
+     * Handle protocol message.
+     *
+     * @param message Raw protocol message.
+     * @param address The Socket address of remote.
+     * @return Text that shows in UI.
+     *
+     * @implNote The default implementation of this method will simply
+     *           return the raw protocol message.
      */
     default String handleMessage(String message, SocketAddress address) {
         return message;
