@@ -27,6 +27,7 @@ import ac.adproj.mchat.handler.MessageTypeConstants;
 import ac.adproj.mchat.model.Listener;
 import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.service.CommonThreadPool;
+import ac.adproj.mchat.service.MessageDistributor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -44,7 +45,6 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import static ac.adproj.mchat.handler.MessageType.INCOMING_MESSAGE;
 import static ac.adproj.mchat.handler.MessageType.NOTIFY_LOGOFF;
@@ -69,19 +69,18 @@ public class ClientListener implements Listener {
      * Constructs Client Listener with arguments.
      *
      * @param shell     Client UI Window (Shell) Object.
-     * @param uiActions UI actions when the listener receives message.
      * @param address   Server address.
      * @param port      Client port.
      * @param username  The user name.
      * @param keyFile   Path to the key file.
      * @throws IOException If I/O Error occurs.
      */
-    public ClientListener(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username,
+    public ClientListener(Shell shell, byte[] address, int port, String username,
                           String keyFile) throws IOException {
         this.name = username;
         this.key = keyFile.isEmpty() ? null : new AESKeyServiceImpl().readKeyFromFile(keyFile);
 
-        init(shell, uiActions, address, port, username);
+        init(shell, address, port, username);
     }
 
     /**
@@ -131,13 +130,12 @@ public class ClientListener implements Listener {
      * Initialization method.
      *
      * @param shell     Client UI Window (Shell) Object.
-     * @param uiActions UI actions when the listener receives message.
      * @param address   Server address.
      * @param port      Client UDP port.
      * @param username  The username.
      * @throws IOException If I/O error occurs.
      */
-    private void init(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username)
+    private void init(Shell shell, byte[] address, int port, String username)
             throws IOException {
         socketChannel = DatagramChannel.open();
 
@@ -147,18 +145,17 @@ public class ClientListener implements Listener {
 
         uuid = UUID.randomUUID().toString();
 
-        initNioSocketConnection(shell, uiActions, ia, username);
+        initNioSocketConnection(shell, ia, username);
     }
 
     /**
      * Initializes the UDP connection.
      *
      * @param shell     Client UI Window (Shell) Object.
-     * @param uiActions UI actions when the listener receives message.
      * @param ia        The address of client.
      * @param username  The username.
      */
-    private void initNioSocketConnection(Shell shell, Consumer<String> uiActions, InetAddress ia, String username) {
+    private void initNioSocketConnection(Shell shell, InetAddress ia, String username) {
         ClientMessageHandler handler = new ClientMessageHandler(force -> {
             if (Boolean.TRUE.equals(force)) {
                 try {
@@ -190,11 +187,15 @@ public class ClientListener implements Listener {
             LOG.error("Failed to connect.", e);
         }
 
-        shell.getDisplay().syncExec(() -> {
-            uiActions.accept("Connected to Server, UserName: " + username + ", UUID: " + uuid);
-        });
+        try {
+            MessageDistributor.getInstance().sendUiMessage("Connected to Server, UserName: " + username + ", UUID: " + uuid);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
 
-        CommonThreadPool.execute(() -> readMessage(shell, uiActions, handler));
+            e.printStackTrace();
+        }
+
+        CommonThreadPool.execute(() -> readMessage(shell, handler));
     }
 
     private String encryptMessage(String message) {
@@ -247,7 +248,7 @@ public class ClientListener implements Listener {
         return "";
     }
 
-    private void readMessage(Shell shell, Consumer<String> uiActions, ClientMessageHandler handler) {
+    private void readMessage(Shell shell, ClientMessageHandler handler) {
         while (socketChannel.isOpen()) {
             final ByteBuffer buffer = ByteBuffer.allocate(ProtocolStrings.BUFFER_SIZE);
 
@@ -270,11 +271,15 @@ public class ClientListener implements Listener {
                     try {
                         String rawMessage = decryptMessage(sbuffer.toString());
 
-                        uiActions.accept(handler.handleMessage(rawMessage, socketChannel.getRemoteAddress()));
+                        MessageDistributor.getInstance().sendUiMessage(handler.handleMessage(rawMessage, socketChannel.getRemoteAddress()));
                     } catch (IOException exc) {
                         LOG.error("Failed to get remote address.", exc);
 
                         display.syncExec(() -> MessageDialog.openError(shell, "出错", "读取服务器地址出错：" + exc.getMessage()));
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+
+                        LOG.error("Interrupted by other thread. ");
                     }
                 });
 

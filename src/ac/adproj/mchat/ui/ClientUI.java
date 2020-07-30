@@ -18,6 +18,7 @@
 package ac.adproj.mchat.ui;
 
 import ac.adproj.mchat.listener.ClientListener;
+import ac.adproj.mchat.service.MessageDistributor;
 import org.eclipse.swt.widgets.Display;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +43,13 @@ public class ClientUI extends BaseChattingUI {
     private static final Logger LOG = LoggerFactory.getLogger(ClientUI.class);
     
     public void initListener(byte[] ipAddress, int port, String userName, String keyFile) throws IOException {
+
+        MessageDistributor.getInstance().registerSubscriber(s -> {
+            getDisplay().asyncExec(() -> appendMessageDisplay(s));
+        });
+
         if (!ClientListener.checkNameDuplicates(ipAddress, userName)) {
-            listener = new ClientListener(this, this::appendMessageDisplay, ipAddress, port, userName, keyFile);
+            listener = new ClientListener(this, ipAddress, port, userName, keyFile);
         } else {
             errorDialog("用户名重复了！");
             initListener(ipAddress, port, getUserName(), keyFile);
