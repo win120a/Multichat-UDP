@@ -39,7 +39,7 @@ import ac.adproj.mchat.model.User;
  * @since 2020/5/19
  */
 public class UserManager implements Iterable<User> {
-    private static UserManager instance;
+    private static volatile UserManager instance;
     
     /**
      * 获得此类的唯一实例。
@@ -48,7 +48,11 @@ public class UserManager implements Iterable<User> {
      */
     public static UserManager getInstance() {
         if (instance == null) {
-            instance = new UserManager();
+            synchronized (UserManager.class) {
+                if (instance == null) {
+                    instance = new UserManager();
+                }
+            }
         }
 
         return instance;
