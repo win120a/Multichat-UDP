@@ -26,7 +26,7 @@ import ac.adproj.mchat.ui.CommonDialogs;
 import static ac.adproj.mchat.handler.MessageType.*;
 
 /**
- * 客户端消息处理类。
+ * Client message handler.
  * 
  * @author Andy Cheung
  */

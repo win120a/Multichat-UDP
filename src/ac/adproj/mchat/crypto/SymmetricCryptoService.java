@@ -21,17 +21,14 @@ import javax.crypto.BadPaddingException;
 import java.security.InvalidKeyException;
 
 /**
- * <p>Represents a symmetric crypto service that can be used to encrypt text messages,
- * and produce Base64 result.</p>
- * 
- * <p>文本对称加密 (加密并产生 Base64 字符) 的接口。</p>
+ * Represents a symmetric crypto service that can be used to encrypt text messages,
+ * and produce Base64 result.
  *
  * @author Andy Cheung
  */
 public interface SymmetricCryptoService {
     /**
-     * <p>Encrypt a text message to Base64 string.</p>
-     * <p>加密并转换为 Base64 文本。</p>
+     * Encrypt a text message to Base64 string.
      *
      * @param message The raw text message.
      * @return The encrypted Base64 result.
@@ -40,8 +37,7 @@ public interface SymmetricCryptoService {
     String encryptMessageToBase64String(String message) throws InvalidKeyException;
 
     /**
-     * <p>Decrypt the encrypted Base64 message to raw message.</p>
-     * <p>解密加密所产生的文本。</p>
+     * Decrypt the encrypted Base64 message to raw message.
      *
      * @param base64Message The encrypted Base64 result.
      * @return Decrypted Message.

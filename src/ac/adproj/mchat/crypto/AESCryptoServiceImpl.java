@@ -38,6 +38,11 @@ public class AESCryptoServiceImpl implements SymmetricCryptoService {
     private final IvParameterSpec ips;
 
     /**
+     * Valid IV byte array length, which is 16.
+     */
+    private static final int VALID_IV_LENGTH = 16;
+
+    /**
      * Initializes this object with specified key and a random initial vector.
      *
      * @param key The secret key.
@@ -53,13 +58,13 @@ public class AESCryptoServiceImpl implements SymmetricCryptoService {
     }
 
     /**
-     * Initializes this object with specified key and a specialized initial vector.
+     * Initializes this object with specified key and initial vector.
      *
      * @param key The secret key.
      * @param iv The initial vector.
      */
     public AESCryptoServiceImpl(Key key, byte[] iv) {
-        if (iv.length != 16) {
+        if (iv.length != VALID_IV_LENGTH) {
             throw new IllegalArgumentException("IV length should be 16.");
         }
 
@@ -98,7 +103,7 @@ public class AESCryptoServiceImpl implements SymmetricCryptoService {
         try {
             cipherText = cipher.doFinal(plainText);
         } catch (IllegalBlockSizeException | BadPaddingException ignored) {
-            // Shouldn't happen.
+            // Shouldn't happen in encryption.
             throw new AssertionError(ignored);
         }
 

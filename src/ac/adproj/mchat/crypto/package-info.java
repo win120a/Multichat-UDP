@@ -1,5 +1,5 @@
 /**
- * 消息加密类所在包。
+ * Utility classes of message encryption.
  * 
  * @author Andy Cheung
  */

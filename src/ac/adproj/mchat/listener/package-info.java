@@ -1,5 +1,5 @@
 /**
- * 协议处理类。
+ * Network socket handling classes. (Listeners)
  * 
  * @author Andy Cheung
  */

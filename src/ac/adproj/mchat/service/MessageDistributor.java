@@ -82,7 +82,7 @@ public class MessageDistributor {
      * @author Andy Cheung
      * @since 2020.5.24
      */
-    public static interface SubscriberCallback {
+    public interface SubscriberCallback {
         /**
          * 收到信息后的回调方法。
          * @param uiMessage 处理后的，对用户友好的信息。

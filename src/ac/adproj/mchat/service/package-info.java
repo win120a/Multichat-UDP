@@ -1,5 +1,5 @@
 /**
- * 系统服务所在包。
+ * System services.
  * 
  * @author Andy Cheung
  */

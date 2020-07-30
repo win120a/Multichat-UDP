@@ -24,14 +24,14 @@ import static ac.adproj.mchat.util.CollectionUtils.emptyMap;
 import static ac.adproj.mchat.util.CollectionUtils.mapOf;
 
 /**
- * 消息类型枚举和消息元素分离器类。
+ * Message type enumeration. Also provides methods to tokenize and generate protocol message.
  * 
  * @author Andy Cheung
  * @since 2020/5/19
  */
 public enum MessageType {
     /**
-     * 用户注册或连接上
+     * User registration.
      */
     REGISTER {
         @Override
@@ -58,7 +58,7 @@ public enum MessageType {
     },
 
     /**
-     * 用户注销或断开
+     * Notification of user log off (or disconnect).
      */
     NOTIFY_LOGOFF {
         @Override
@@ -75,7 +75,7 @@ public enum MessageType {
     },
 
     /**
-     * 用户消息
+     * Incoming chat message.
      */
     INCOMING_MESSAGE {
         @Override
@@ -107,7 +107,7 @@ public enum MessageType {
     },
 
     /**
-     * 调试模式
+     * Debugging mode.
      */
     DEBUG {
         @Override
@@ -122,7 +122,7 @@ public enum MessageType {
     },
 
     /**
-     * 用户名查重请求消息
+     * Request of User Name query service.
      */
     USERNAME_QUERY_REQUEST {
         @Override
@@ -137,7 +137,7 @@ public enum MessageType {
     },
 
     /**
-     * 用于向客户端通知非法密钥的信号字
+     * Notification message of invalid encryption key.
      */
     INVALID_KEY {
         @Override
@@ -152,7 +152,7 @@ public enum MessageType {
     },
     
     /**
-     * 未知
+     * Unknown protocol message.
      */
     UNKNOWN {
         @Override
@@ -167,10 +167,10 @@ public enum MessageType {
     };
     
     /**
-     * 获取消息类型（对象）。
+     * Get the corresponding MessageType instance according to protocol string.
      * 
-     * @param message 协议消息
-     * @return 对应的 MessageType 对象。
+     * @param message Raw protocol message.
+     * @return The corresponding Message Type object.
      */
     public static MessageType getMessageType(String message) {
         if (message.startsWith(CONNECTING_GREET_LEFT_HALF)) {
@@ -186,16 +186,23 @@ public enum MessageType {
         } else if (message.startsWith(INVALID_KEY_NOTIFYING_STRING_HEADER)) {
             return INVALID_KEY;
         }
+
         return MessageType.UNKNOWN;
     }
 
+    /**
+     * Generate protocol string according to "elements" map.
+     *
+     * @param elements A map which contains information to generate protocol message.
+     * @return Generated protocol string.
+     */
     public abstract String generateProtocolMessage(Map<String, String> elements);
 
     /**
-     * 消息元素分离方法。
+     * Tokenize message, and put the tokenized elements into a map.
      * 
-     * @param message 协议消息
-     * @return 分离后的消息元素。
+     * @param message Raw protocol message.
+     * @return A map which contains protocol message elements.
      */
     public abstract Map<String, String> tokenize(String message);
 }

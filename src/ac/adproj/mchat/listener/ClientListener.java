@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.BadPaddingException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -45,39 +46,38 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import javax.crypto.BadPaddingException;
-
 import static ac.adproj.mchat.handler.MessageType.INCOMING_MESSAGE;
 import static ac.adproj.mchat.handler.MessageType.NOTIFY_LOGOFF;
-import static ac.adproj.mchat.util.CollectionUtils.mapOf;
 import static ac.adproj.mchat.model.ProtocolStrings.*;
+import static ac.adproj.mchat.util.CollectionUtils.mapOf;
 
 /**
- * 客户端监听器。
+ * Client Listener.
  *
  * @author Andy Cheung
  */
 public class ClientListener implements Listener {
     private static final Logger LOG = LoggerFactory.getLogger(ClientListener.class);
-    private DatagramChannel socketChannel;
-    private String uuid;
     private final String name;
     private final Key key;
+    private DatagramChannel socketChannel;
+    private String uuid;
+
+    private static final int TIMEOUT = 5000;
 
     /**
-     * 构造客户端监听器类。
+     * Constructs Client Listener with arguments.
      *
-     * @param shell     服务器 UI 窗口
-     * @param uiActions 包装由服务器 UI 指定的行为，其在接受、处理完消息后执行。
-     * @param address   服务器地址
-     * @param port      客户端端口
-     * @param username  用户名
-     * @param keyFile   密钥文件名
-     * 
-     * @throws IOException 出现 I/O 错误
+     * @param shell     Client UI Window (Shell) Object.
+     * @param uiActions UI actions when the listener receives message.
+     * @param address   Server address.
+     * @param port      Client port.
+     * @param username  The user name.
+     * @param keyFile   Path to the key file.
+     * @throws IOException If I/O Error occurs.
      */
     public ClientListener(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username,
-            String keyFile) throws IOException {
+                          String keyFile) throws IOException {
         this.name = username;
         this.key = keyFile.isEmpty() ? null : new AESKeyServiceImpl().readKeyFromFile(keyFile);
 
@@ -85,12 +85,12 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * 向服务器查询用户名是否重复。
+     * Contact server to check the user name whether duplicate or not.
      *
-     * @param serverAddress 服务器地址
-     * @param name          待查用户名
-     * @return 是否重复
-     * @throws IOException 如果IO出现异常
+     * @param serverAddress The server address.
+     * @param name          The user name to query.
+     * @return True if the username is duplicate with others.
+     * @throws IOException If I/O Error occurs.
      */
     public static boolean checkNameDuplicates(byte[] serverAddress, String name) throws IOException {
         DatagramChannel dc = DatagramChannel.open();
@@ -105,8 +105,11 @@ public class ClientListener implements Listener {
         try {
 
             dc.configureBlocking(true);
-            dc.send(bb, new InetSocketAddress(InetAddress.getByAddress(serverAddress),
-                    ProtocolStrings.SERVER_CHECK_DUPLICATE_PORT));
+
+            InetSocketAddress ia = new InetSocketAddress(InetAddress.getByAddress(serverAddress),
+                    ProtocolStrings.SERVER_CHECK_DUPLICATE_PORT);
+
+            dc.send(bb, ia);
 
             bb.clear();
 
@@ -125,14 +128,14 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * 业务逻辑初始化方法。
+     * Initialization method.
      *
-     * @param shell     服务器 UI 窗口
-     * @param uiActions 包装由服务器 UI 指定的行为，其在接受、处理完消息后执行。
-     * @param address   服务器地址
-     * @param port      客户端端口
-     * @param username  用户名
-     * @throws IOException 如果读写出错
+     * @param shell     Client UI Window (Shell) Object.
+     * @param uiActions UI actions when the listener receives message.
+     * @param address   Server address.
+     * @param port      Client UDP port.
+     * @param username  The username.
+     * @throws IOException If I/O error occurs.
      */
     private void init(Shell shell, Consumer<String> uiActions, byte[] address, int port, String username)
             throws IOException {
@@ -148,12 +151,12 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * 初始化 NIO UDP 连接。
+     * Initializes the UDP connection.
      *
-     * @param shell     客户端 UI 窗体
-     * @param uiActions 由客户端指定的 UI 行为，在处理完消息后执行
-     * @param ia        客户端地址
-     * @param username  用户名
+     * @param shell     Client UI Window (Shell) Object.
+     * @param uiActions UI actions when the listener receives message.
+     * @param ia        The address of client.
+     * @param username  The username.
      */
     private void initNioSocketConnection(Shell shell, Consumer<String> uiActions, InetAddress ia, String username) {
         ClientMessageHandler handler = new ClientMessageHandler(force -> {
@@ -208,6 +211,12 @@ public class ClientListener implements Listener {
         return "";
     }
 
+    /**
+     * Decrypts encrypted message.
+     *
+     * @param rawMessage Raw encrypted protocol message.
+     * @return Decrypted message.
+     */
     private String decryptMessage(String rawMessage) {
         try {
             byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
@@ -219,7 +228,7 @@ public class ClientListener implements Listener {
                 String decryptedMessage = new AESCryptoServiceImpl(key, ivBytes).decryptMessageFromBase64String(encryptedText);
 
                 Map<String, String> infoMap = mapOf(MessageTypeConstants.UUID, messageUuid,
-                                                    MessageTypeConstants.MESSAGE_TEXT, decryptedMessage);
+                        MessageTypeConstants.MESSAGE_TEXT, decryptedMessage);
 
                 rawMessage = INCOMING_MESSAGE.generateProtocolMessage(infoMap);
             }
@@ -265,9 +274,7 @@ public class ClientListener implements Listener {
                     } catch (IOException exc) {
                         LOG.error("Failed to get remote address.", exc);
 
-                        display.syncExec(() -> {
-                            MessageDialog.openError(shell, "出错", "读取服务器地址出错：" + exc.getMessage());
-                        });
+                        display.syncExec(() -> MessageDialog.openError(shell, "出错", "读取服务器地址出错：" + exc.getMessage()));
                     }
                 });
 
@@ -314,9 +321,9 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * 发送聊天信息。
+     * Send chatting message.
      *
-     * @param message 消息内容
+     * @param message The message content.
      */
     public void sendMessage(String message) {
         if (message.equals(ProtocolStrings.DEBUG_MODE_STRING)) {
@@ -339,9 +346,9 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * 向服务器申请注销。
+     * Notify server the client is going to logoff.
      *
-     * @throws IOException 出现IO错误
+     * @throws IOException If I/O Error occurs.
      */
     public void logoff() throws IOException {
         if (isConnected()) {
@@ -352,9 +359,9 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * 当服务器强行下线时的回调方法。
+     * Callback method when the server kicks the connection.
      *
-     * @throws IOException 出现IO错误
+     * @throws IOException If I/O Error occurs.
      */
     private void onForceLogoff() throws IOException {
         if (isConnected()) {
@@ -364,7 +371,7 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * 关闭连接，回收资源。
+     * Close connection & resources.
      */
     @Override
     public void close() throws Exception {

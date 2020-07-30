@@ -1,5 +1,5 @@
 /**
- * 协议字符串处理类。
+ * Handler classes of protocol strings.
  * 
  * @author Andy Cheung
  */
