@@ -27,14 +27,14 @@ import java.security.Key;
  */
 public interface SymmetricKeyService {
     /**
-     * Generate a secret key.
+     * Generates a secret key.
      *
      * @return The generated key.
      */
     Key generateKey();
 
     /**
-     * Generate a secret key and save it to a file.
+     * Generates a secret key and save it to a file.
      *
      * @param fileName Target file name.
      * @return The generated key.
@@ -43,7 +43,7 @@ public interface SymmetricKeyService {
     Key generateKeyAndStoreToFile(String fileName) throws IOException;
 
     /**
-     * Store specified secret key to a file.
+     * Stores specified secret key to a file.
      *
      * @param key      The key object.
      * @param fileName Target file name.
@@ -52,7 +52,7 @@ public interface SymmetricKeyService {
     void storeKeyToFile(Key key, String fileName) throws IOException;
 
     /**
-     * Read key from specified file.
+     * Reads key from specified file.
      *
      * @param fileName The file name.
      * @return The key.

@@ -21,7 +21,7 @@ import java.io.*;
 import java.security.Key;
 
 /**
- * 密钥服务的抽象模板类。
+ * Abstract template implementation of Symmetric Key Service.
  * 
  * @author Andy Cheung
  */

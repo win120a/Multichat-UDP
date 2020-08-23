@@ -18,19 +18,23 @@
 package ac.adproj.mchat.crypto;
 
 /**
- * 加密算法参数工具类
+ * Utility class of parameters in crypto services.
  *
  * @author Andy Cheung
  */
 public final class ParamUtil {
-    private ParamUtil() { throw new UnsupportedOperationException("No instance! "); }
+    private ParamUtil() {
+        throw new UnsupportedOperationException("No instance! ");
+    }
 
     /**
-     * 根据 UUID 字符串计算 IV 值。
-     * @param str 字符串
-     * @param length IV 的长度
-     * @return 计算过的初始化向量
-     * @implNote 直接取前 length 位，使用 String 的 hashCode 算法得出对应位 Hash，之后填充。
+     * Calculate the IV value according to UUID String.
+     *
+     * @param str    The String
+     * @param length Length of IV.
+     * @return Calculated IV.
+     * @implNote Use the String.hashCode() algorithm to generate the hash of a character,
+     *          run 'length' times. Then concatenate them.
      */
     public static byte[] getIVFromString(String str, int length) {
         byte[] ivBytes = new byte[length];

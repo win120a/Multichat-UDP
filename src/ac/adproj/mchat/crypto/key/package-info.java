@@ -1,5 +1,5 @@
 /**
- * 加密密钥服务类。
+ * Crypto key services.
  * 
  * @author Andy Cheung
  */

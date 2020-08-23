@@ -22,7 +22,7 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * 密钥服务的 AES 实现。
+ * AES Implementation of Key Service.
  * 
  * @author Andy Cheung
  */
