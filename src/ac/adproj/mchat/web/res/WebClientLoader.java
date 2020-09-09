@@ -26,7 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
- * WebSocket 客户端应用包的加载程序。
+ * Loader of WebSocket client web application package.
  * 
  * @author Andy Cheung
  * @since 2020/5/22
@@ -38,10 +38,12 @@ public final class WebClientLoader {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebClientLoader.class);
 
-    public static final String WAR_NAME_IN_RESOURCE_PATH = "webClient.war"; 
+    public static final String WAR_NAME_IN_RESOURCE_PATH = "webClient.war";
+
     /**
-     * 加载应用包。（退出时会删除）
-     * @return 应用包释放到的路径
+     * Copy the web application package to temporary directory.
+     *
+     * @return Destination of the web application package.
      */
     public static String getWebappWarPath() {
         FileOutputStream fos = null;

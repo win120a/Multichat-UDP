@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 零散线程的线程池。
+ * Thread pool for scattered tasks.
  * 
  * @author Andy Cheung
  * @since 2020/5/24
@@ -46,7 +46,7 @@ public class CommonThreadPool {
         synchronized (MUTEX) {
             threadNumber++;
             
-            String threadName = "零散线程池线程 - #" + threadNumber + (comment.isEmpty() ? "" : " - " + comment);
+            String threadName = "ScatteredTaskWorkerThread - #" + threadNumber + (comment.isEmpty() ? "" : " - " + comment);
             
             Thread t = new Thread(r, threadName);
             
@@ -59,9 +59,9 @@ public class CommonThreadPool {
     private static ExecutorService threadPool = new ThreadPoolExecutor(3, 8, 1, TimeUnit.MINUTES, bq, threadFactory);
     
     /**
-     * 向线程池提交线程。
+     * Commit a task to the thread pool.
      * 
-     * @param r 线程执行体
+     * @param r Runnable of the task.
      */
     public static synchronized void execute(Runnable r) {
         synchronized (MUTEX_EXECUTE) {
@@ -70,10 +70,10 @@ public class CommonThreadPool {
     }
     
     /**
-     * 向线程池提交线程，并根据说明文字命名。
+     * Commit a task to the thread pool, and name it with a statement.
      * 
-     * @param r 线程执行体
-     * @param stmt 说明文字
+     * @param r Runnable of the task.
+     * @param stmt Statement of the worker thread.
      */
     public static synchronized void execute(Runnable r, String stmt) {
         synchronized (MUTEX_EXECUTE) {
@@ -84,7 +84,10 @@ public class CommonThreadPool {
             threadPool.execute(r);
         }
     }
-    
+
+    /**
+     * Shutdown the thread pool.
+     */
     public static void shutdown() {
         threadPool.shutdownNow();
     }

@@ -18,7 +18,7 @@
 package ac.adproj.mchat.model;
 
 /**
- * 连接监听器接口。
+ * Interface of network connection listeners.
  * 
  * @author Andy Cheung
  * @since 2020/4/26
@@ -27,25 +27,25 @@ package ac.adproj.mchat.model;
  */
 public interface Listener extends AutoCloseable {
     /**
-     * 向指定端发送信息。
+     * Sends chatting message to a specified machine. (according to UUID)
      * 
-     * @param message 消息内容
-     * @param uuid 客户端标识 （UUID）
+     * @param message Message content.
+     * @param uuid Client's UUID.
      */
     void sendMessage(String message, String uuid);
 
     /**
-     * 向指定端发送协议信息。
+     * Sends raw protocol message to a specified machine. (according to UUID)
      * 
-     * @param text 协议消息体
-     * @param uuid 客户端标识 （UUID）
+     * @param text Raw protocol message.
+     * @param uuid Client's UUID.
      */
     void sendCommunicationData(String text, String uuid);
     
     /**
-     * 确定在端间是否有连接。
+     * Determines whether the listener has established a connection.
      * 
-     * @return 如在端间有连接，返回true
+     * @return If a connection exists between server and client.
      */
     boolean isConnected();
 }

@@ -17,6 +17,12 @@
 
 package ac.adproj.mchat.handler;
 
+/**
+ * Constants in Message Type Enumeration.
+ * Used to set the key of map of the tokenized message.
+ *
+ * @author Andy Cheung
+ */
 public class MessageTypeConstants {
     private MessageTypeConstants() {
         throw new UnsupportedOperationException("NO MessageTypeConstants instance for you! ");

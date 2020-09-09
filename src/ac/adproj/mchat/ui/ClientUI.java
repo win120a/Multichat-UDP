@@ -33,7 +33,7 @@ import static ac.adproj.mchat.ui.CommonDialogs.errorDialog;
 import static ac.adproj.mchat.ui.CommonDialogs.inputDialog;
 
 /**
- * 客户端界面。
+ * Client UI.
  * 
  * @author Andy Cheung
  */

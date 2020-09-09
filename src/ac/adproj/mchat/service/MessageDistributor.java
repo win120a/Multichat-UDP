@@ -17,17 +17,17 @@
 
 package ac.adproj.mchat.service;
 
+import ac.adproj.mchat.handler.MessageType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import ac.adproj.mchat.handler.MessageType;
-import ac.adproj.mchat.handler.MessageTypeConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static ac.adproj.mchat.handler.MessageTypeConstants.*;
+import static ac.adproj.mchat.handler.MessageTypeConstants.MESSAGE_TEXT;
+import static ac.adproj.mchat.handler.MessageTypeConstants.UUID;
 
 /**
  * Message Distributor (like MQ).
@@ -49,7 +49,7 @@ public class MessageDistributor {
     }
 
     /**
-     * Obtain the only instance of MessageDistributor.
+     * Obtains the only instance of MessageDistributor.
      *
      * @return The only instance.
      */
@@ -107,7 +107,7 @@ public class MessageDistributor {
      */
     public interface SubscriberCallback {
         /**
-         * Callback method when receives message.
+         * Callback method when MDS receives message.
          * @param uiMessage The UI message that shows to user.
          */
         void onMessageReceived(String uiMessage);
@@ -115,6 +115,7 @@ public class MessageDistributor {
 
     /**
      * Directly sends UI message to subscribers.
+     *
      * @param message The UI message.
      * @throws InterruptedException If the process of putting message into queue is interrupted.
      */
@@ -123,7 +124,7 @@ public class MessageDistributor {
     }
     
     /**
-     * Shortcut of converting the "INCOMING_MESSAGE" to UI message, and send the message to subscribers.
+     * Shortcut of converting the "INCOMING_MESSAGE" to UI message, and sending the message to subscribers.
      *
      * @param message Raw protocol message whose type is "INCOMING_MESSAGE".
      * @throws InterruptedException If the process of putting message into queue is interrupted.
@@ -134,7 +135,7 @@ public class MessageDistributor {
     }
 
     /**
-     * Register the subscriber callback to this Message Distributor.
+     * Registers the subscriber callback to this Message Distributor.
      *
      * @param callback The callback method when receives message.
      */
