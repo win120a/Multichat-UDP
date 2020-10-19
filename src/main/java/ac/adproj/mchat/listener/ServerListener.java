@@ -50,17 +50,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static ac.adproj.mchat.model.ProtocolStrings.*;
 import static ac.adproj.mchat.util.CollectionUtils.mapOf;
 
 /**
- * 聊天服务器 UDP 协议通信类。
+ * UDP Server Listener.
  * 
  * @author Andy Cheung
- * @implNote 本服务器主要使用 DatagramChannel 来接受用户的 UDP 连接。其使用 ServerMessageHandler
- *           来进行信息处理， UserNameQueryService 来接受客户端对用户名是否使用的询问（用户名查询服务）。其使用
- *           ThreadPoolExecutor 作为线程池实现，以管理线程。
  * 
  * @see java.nio.channels.DatagramChannel
  * @see java.util.concurrent.ThreadPoolExecutor
@@ -75,26 +73,35 @@ public class ServerListener implements Listener {
     private UserNameQueryService userNameQueryService;
     private Key key;
 
-    private int threadNumber = 0;
+    private AtomicInteger threadNumber = new AtomicInteger();
 
-    private static ServerListener instance;
+    private static volatile ServerListener instance;
 
     private static final Logger LOG = LoggerFactory.getLogger(ServerListener.class);
 
     /**
-     * 获得此类的唯一实例。
+     * Obtain the only instance of ServerListener. If the instance does not exist, initialize the server listener.
      * 
-     * @return 实例
-     * @throws IOException 如果读写出错
+     * @return The instance.
+     * @throws IOException If I/O error occurs.
      */
     public static ServerListener getInstance() throws IOException {
         if (instance == null) {
-            instance = new ServerListener();
+            synchronized (ServerListener.class) {
+                if (instance == null) {
+                    instance = new ServerListener();
+                }
+            }
         }
 
         return instance;
     }
-    
+
+    /**
+     * Sets encryption key. This method can be invoked only once.
+     *
+     * @param key The encryption key.
+     */
     public void setKey(Key key) {
         if (this.key == null) {
             this.key = key;
@@ -102,20 +109,20 @@ public class ServerListener implements Listener {
     }
 
     /**
-     * 构造服务端监听器类。
-     * 
-     * @throws IOException 如果读写出错
+     * Constructor.
+     *
+     * @throws IOException If I/O error occurs.
      */
     private ServerListener() throws IOException {
         init();
     }
 
     /**
-     * 读取消息
+     * Read message.
      * 
-     * @param bb      写入到的字节缓冲区
-     * @param handler 协议消息处理器
-     * @param address 客户端地址
+     * @param bb      Destination byte buffer.
+     * @param handler Protocol message handler.
+     * @param address Client address.
      */
     private void readMessage(ByteBuffer bb, Handler handler, SocketAddress address) {
 
@@ -182,10 +189,7 @@ public class ServerListener implements Listener {
 
         BlockingQueue<Runnable> bq = new LinkedBlockingQueue<>(16);
 
-        ThreadFactory threadFactory = r -> {
-            threadNumber++;
-            return new Thread(r, "服务器 UDP 监听线程 - #" + threadNumber);
-        };
+        ThreadFactory threadFactory = r -> new Thread(r, "服务器 UDP 监听线程 - #" + threadNumber.incrementAndGet());
 
         threadPool = new ThreadPoolExecutor(4, 16, 2, TimeUnit.MINUTES, bq, threadFactory);
 
@@ -202,9 +206,9 @@ public class ServerListener implements Listener {
     }
 
     /**
-     * 接受 UDP 连接。
+     * Receives UDP Connection, and dispatches the connection to message receiving method.
      *
-     * @param handler 服务器消息处理器
+     * @param handler Server message handler.
      */
     private void receiveConnection(ServerMessageHandler handler) {
         // 用于规避内部类变量 final 限制的List （可变类）
@@ -246,6 +250,8 @@ public class ServerListener implements Listener {
                     LOG.warn(String.format("Got exception when receiving message. UUID: %s", sr.get().getUuid()), exc);
 
                     sr.clear();
+
+                    // Clear the reference for garbage collection.
                     sr = null;
                 }
 
@@ -262,57 +268,17 @@ public class ServerListener implements Listener {
     @Override
     public void sendCommunicationData(String text, String uuid) {
         if (uuid.equals(ProtocolStrings.BROADCAST_MESSAGE_UUID)) {
-            // 服务器发出的消息。
-            if (MessageType.INCOMING_MESSAGE.tokenize(text).get(MessageTypeConstants.UUID).equals(ProtocolStrings.BROADCAST_MESSAGE_UUID)) {
-                try {
-                    // 同时更新 UI 和 WebSocket
-                    MessageDistributor.getInstance().sendRawProtocolMessage(text);
-                } catch (InterruptedException e1) {
-                    LOG.warn("Sending message to other UI components, but the process was interrupted by other thread.", e1);
-                    Thread.currentThread().interrupt();
-                }
-            }
-            
-            String encryptedText = text;
-            
-            for (User u : userManager.userProfileValueSet()) {
-                if (key != null) {
-                    byte[] ivBytes = ParamUtil.getIVFromString(u.getUuid(), 16);
+            // Broadcast from chatting server.
 
-                    SymmetricCryptoService scs = new AESCryptoServiceImpl(key, ivBytes);
-
-                    String rawMessage = MessageType.INCOMING_MESSAGE.tokenize(text).get("messageText");
-
-                    try {
-                        String message = scs.encryptMessageToBase64String(rawMessage);
-                        encryptedText = MESSAGE_HEADER_LEFT_HALF + uuid + MESSAGE_HEADER_MIDDLE_HALF
-                                + MESSAGE_HEADER_RIGHT_HALF + message;
-
-                    } catch (InvalidKeyException e) {
-                        LOG.error("Invalid key!", e);
-                    }
-                }
-
-                final ByteBuffer bb = ByteBuffer.wrap(encryptedText.getBytes(StandardCharsets.UTF_8));
-
-                try {
-                    bb.rewind();
-
-                    while (bb.hasRemaining()) {
-                        serverDatagramChannel.send(bb, u.getAddress());
-                    }
-                } catch (IOException e) {
-                    LOG.error("Error in sending message.", e);
-                }
-            }
+            sendServerBroadcast(text, uuid);
         } else {
             if (key != null) {
                 byte[] ivBytes = ParamUtil.getIVFromString(uuid, 16);
 
                 SymmetricCryptoService scs = new AESCryptoServiceImpl(key, ivBytes);
 
-                String rawMessage = MessageType.INCOMING_MESSAGE.tokenize(text).get("messageText");
-                String nickname = MessageType.INCOMING_MESSAGE.tokenize(text).get("uuid");
+                String rawMessage = MessageType.INCOMING_MESSAGE.tokenize(text).get(MessageTypeConstants.MESSAGE_TEXT);
+                String nickname = MessageType.INCOMING_MESSAGE.tokenize(text).get(MessageTypeConstants.UUID);
 
                 try {
                     String message = scs.encryptMessageToBase64String(rawMessage);
@@ -333,8 +299,53 @@ public class ServerListener implements Listener {
             }
         }
     }
-    
-    
+
+    private void sendServerBroadcast(String text, String uuid) {
+        if (MessageType.INCOMING_MESSAGE.tokenize(text).get(MessageTypeConstants.UUID).equals(ProtocolStrings.BROADCAST_MESSAGE_UUID)) {
+            try {
+                // Update UI and WebSocket simultaneously.
+
+                MessageDistributor.getInstance().sendRawProtocolMessage(text);
+            } catch (InterruptedException e1) {
+                LOG.warn("Sending message to other UI components, but the process was interrupted by other thread.", e1);
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        String encryptedText = text;
+
+        for (User u : userManager.userProfileValueSet()) {
+            if (key != null) {
+                byte[] ivBytes = ParamUtil.getIVFromString(u.getUuid(), 16);
+
+                SymmetricCryptoService scs = new AESCryptoServiceImpl(key, ivBytes);
+
+                String rawMessage = MessageType.INCOMING_MESSAGE.tokenize(text).get(MessageTypeConstants.MESSAGE_TEXT);
+
+                try {
+                    String message = scs.encryptMessageToBase64String(rawMessage);
+                    encryptedText = MESSAGE_HEADER_LEFT_HALF + uuid + MESSAGE_HEADER_MIDDLE_HALF
+                            + MESSAGE_HEADER_RIGHT_HALF + message;
+
+                } catch (InvalidKeyException e) {
+                    LOG.error("Invalid key!", e);
+                }
+            }
+
+            final ByteBuffer bb = ByteBuffer.wrap(encryptedText.getBytes(StandardCharsets.UTF_8));
+
+            try {
+                bb.rewind();
+
+                while (bb.hasRemaining()) {
+                    serverDatagramChannel.send(bb, u.getAddress());
+                }
+            } catch (IOException e) {
+                LOG.error("Error in sending message.", e);
+            }
+        }
+    }
+
 
     @Override
     public void sendMessage(String message, String uuid) {
@@ -373,7 +384,7 @@ public class ServerListener implements Listener {
     }
 
     /**
-     * 关闭监听器，回收资源。
+     * Close the listener and release resources.
      */
     @Override
     public void close() throws Exception {

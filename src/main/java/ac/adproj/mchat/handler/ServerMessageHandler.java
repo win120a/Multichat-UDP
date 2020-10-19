@@ -51,7 +51,7 @@ public class ServerMessageHandler implements Handler {
     public String handleMessage(String message, SocketAddress address) {
         switch (getMessageType(message)) {
             case REGISTER:
-                // 用户注册
+                // User registration.
                 Map<String, String> data = REGISTER.tokenize(message);
                 User userObject = new User(data.get(MessageTypeConstants.UUID),
                                             address, data.get(MessageTypeConstants.USERNAME));
@@ -64,12 +64,12 @@ public class ServerMessageHandler implements Handler {
                             " (" + data.get(MessageTypeConstants.USERNAME) + ") Connected.";
 
             case DEBUG:
-                // 调试模式
+                // Debugging mode.
                 LOG.debug("[UDP] Users: {}", userManager);
                 return "";
 
             case NOTIFY_LOGOFF:
-                // 客户端请求注销
+                // The client was requested for logoff.
                 SoftReference<String> targetUuid = new SoftReference<>(NOTIFY_LOGOFF.tokenize(message).get(MessageTypeConstants.UUID));
 
                 try {
@@ -82,7 +82,7 @@ public class ServerMessageHandler implements Handler {
                 return "Client: " + message.replace(ProtocolStrings.NOTIFY_LOGOFF_HEADER, "") + " Disconnected.";
 
             case INCOMING_MESSAGE:
-                // 收到消息
+                // Got incoming message.
 
                 Map<String, String> msgData = INCOMING_MESSAGE.tokenize(message);
 
@@ -94,7 +94,7 @@ public class ServerMessageHandler implements Handler {
                 String messageText = msgData.get(MessageTypeConstants.MESSAGE_TEXT);
 
                 if (!userManager.containsUuid(fromUuid)) {
-                    // 不接收没有注册机器的任何信息
+                    // Don't response if the machine isn't registered.
                     return "";
                 }
 

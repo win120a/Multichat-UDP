@@ -53,3 +53,5 @@ doc/
 /testBin/
 /.idea/sonarlint/
 /.idea/sonarlint*
+
+target/

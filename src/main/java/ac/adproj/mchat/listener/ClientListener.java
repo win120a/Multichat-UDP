@@ -52,7 +52,7 @@ import static ac.adproj.mchat.model.ProtocolStrings.*;
 import static ac.adproj.mchat.util.CollectionUtils.mapOf;
 
 /**
- * Client Listener.
+ * UDP Client Listener.
  *
  * @author Andy Cheung
  */
@@ -84,7 +84,7 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * Contact server to check the user name whether duplicate or not.
+     * Contacts server to check the user name whether duplicate or not.
      *
      * @param serverAddress The server address.
      * @param name          The user name to query.
@@ -326,7 +326,7 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * Send chatting message.
+     * Sends chatting message.
      *
      * @param message The message content.
      */
@@ -351,7 +351,7 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * Notify server the client is going to logoff.
+     * Notifies server the client is going to logoff.
      *
      * @throws IOException If I/O Error occurs.
      */
@@ -376,7 +376,7 @@ public class ClientListener implements Listener {
     }
 
     /**
-     * Close connection & resources.
+     * Closes connection & resources.
      */
     @Override
     public void close() throws Exception {

@@ -18,7 +18,7 @@
 package ac.adproj.mchat.model;
 
 /**
- * 协议字符串常量类。
+ * Constants of protocol.
  *  
  * @author Andy Cheung
  */
@@ -32,71 +32,80 @@ public final class ProtocolStrings {
     }
 
     /**
-     * 聊天服务器端口。
+     * UDP Chatting server port.
      */
     public static final int SERVER_PORT = 10240;
     
     /**
-     * 用户名查询服务端口。
+     * User name query service port.
      */
     public static final int SERVER_CHECK_DUPLICATE_PORT = 10241;
     
     /**
-     * 客户端的默认端口。
+     * Default port of UDP client.
      */
     public static final int CLIENT_DEFAULT_PORT = 10242;
     
     /**
-     * NIO 缓冲区大小。
+     * Size of NIO buffers.
      */
     public static final int BUFFER_SIZE = 1024;
     
     // << CONNECT >>(UUID)>>>>(Name)<< CONNECT >>
-    
+
     /**
-     * 用户注册协议消息的左半部分。
-     * 消息格式：&lt;&lt; CONNECT &gt;&gt;(UUID)&gt;&gt;&gt;&gt;(用户名)&lt;&lt; CONNECT &gt;&gt;
+     * <p>The left half of user registering message.</p>
+     * <br />
+     * <p>Message format: << CONNECT >>(UUID)>>>>(Name)<< CONNECT >></p>
      */
     public static final String CONNECTING_GREET_LEFT_HALF = "<< CONNECT >>";
-    
+
     /**
-     * 用户注册协议消息的中间部分。
-     * 消息格式：&lt;&lt; CONNECT &gt;&gt;(UUID)&gt;&gt;&gt;&gt;(用户名)&lt;&lt; CONNECT &gt;&gt;
+     * <p>The middle half of user registering message.</p>
+     * <br />
+     * <p>Message format: << CONNECT >>(UUID)>>>>(Name)<< CONNECT >></p>
      */
     public static final String CONNECTING_GREET_MIDDLE_HALF = ">>>>>";
-    
+
     /**
-     * 用户注册协议消息的右半部分。
-     * 消息格式：&lt;&lt; CONNECT &gt;&gt;(UUID)&gt;&gt;&gt;&gt;(用户名)&lt;&lt; CONNECT &gt;&gt;
+     * <p>The right half of user registering message.</p>
+     * <br />
+     * <p>Message format: << CONNECT >>(UUID)>>>>(Name)<< CONNECT >></p>
      */
     public static final String CONNECTING_GREET_RIGHT_HALF = "<< CONNECT >>";
-    
+
     /**
-     * 客户端通知注销的请求头。
+     * <p>The header of user logoff message.</p>
+     * <br />
+     * <p>Message format: << DISCONNECT >>(UUID)</p>
      */
     public static final String NOTIFY_LOGOFF_HEADER = "<< LOGOFF >>";
-    
+
     // << MESSAGE >>> <<<< (UUID) >>>> << MESSAGE >> (messageContent)
+
     /**
-     * 信息包的左半部分。
-     * 格式： &lt;&lt; MESSAGE &gt;&gt;&gt; &lt;&lt;&lt;&lt; (UUID) &gt;&gt;&gt;&gt; &lt;&lt; MESSAGE &gt;&gt; (内容)
+     * <p>Left part of protocol string of incoming message.</p>
+     * <br />
+     * <p>Format: << MESSAGE >>> <<<< (UUID) >>>> << MESSAGE >> (messageContent)</p>
      */
     public static final String MESSAGE_HEADER_LEFT_HALF = "<< MESSAGE >>> <<<<";
-    
+
     /**
-     * 信息包的中间部分。
-     * 格式： &lt;&lt; MESSAGE &gt;&gt;&gt; &lt;&lt;&lt;&lt; (UUID) &gt;&gt;&gt;&gt; &lt;&lt; MESSAGE &gt;&gt; (内容)
+     * <p>Middle part of protocol string of incoming message.</p>
+     * <br />
+     * <p>Format: << MESSAGE >>> <<<< (UUID) >>>> << MESSAGE >> (messageContent)</p>
      */
     public static final String MESSAGE_HEADER_MIDDLE_HALF = ">>>>>";
-    
+
     /**
-     * 信息包的右半部分。
-     * 格式： &lt;&lt; MESSAGE &gt;&gt;&gt; &lt;&lt;&lt;&lt; (UUID) &gt;&gt;&gt;&gt; &lt;&lt; MESSAGE &gt;&gt; (内容)
+     * <p>Right part of protocol string of incoming message.</p>
+     * <br />
+     * <p>Format: << MESSAGE >>> <<<< (UUID) >>>> << MESSAGE >> (messageContent)</p>
      */
     public static final String MESSAGE_HEADER_RIGHT_HALF = " << MESSAGE >>";
-    
+
     /**
-     * 调试模式的信号字。目前是让服务器把用户档案打印出来。
+     * The debug signal. Currently, when server listener receive the message, it prints the user list.
      */
     public static final String DEBUG_MODE_STRING = "/// DEBUG ///";
     
@@ -122,12 +131,12 @@ public final class ProtocolStrings {
     public static final String USER_NAME_NOT_EXIST = "<<< Clear >>>";
 
     /**
-     * WebSocket 客户端注册请求头 - 左半
+     * Header of WebSocket user registering message.
      */
     public static final String WEBSOCKET_UUID_HEADER = "<WS><<";
 
     /**
-     * WebSocket 客户端注册请求头 - 右半
+     * Tail of WebSocket user registering message.
      */
     public static final String WEBSOCKET_UUID_TAIL = ">>";
 

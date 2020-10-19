@@ -29,11 +29,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import ac.adproj.mchat.model.User;
 
 /**
- * <p>用户管理器。</p>
- * 
- * <p>此类为单例类，主要目的是在 WebSocket 服务器和 UDP 服务器中间共享用户注册的数据。</p>
- * 
- * <p><b>说明：WebSocket 的用户并不通过该类管理，但是其用户名会在此类保存。</b></p>
+ * <p>User manager.</p>
+ *
+ * <p>Intended for sharing user registration information between WebSocket server and UDP server.</p>
+ *
+ * <p>This class is singleton.</p>
+ *
+ * <p><b>Note: Although the users of WebSocket server aren't managed by this class,
+ * usernames of that are stored in this class.</b></p>
  * 
  * @author Andy Cheung
  * @since 2020/5/19
@@ -42,9 +45,9 @@ public class UserManager implements Iterable<User> {
     private static volatile UserManager instance;
     
     /**
-     * 获得此类的唯一实例。
+     * Obtain the only instance of UserManager.
      * 
-     * @return 实例
+     * @return The only instance.
      */
     public static UserManager getInstance() {
         if (instance == null) {
@@ -58,11 +61,19 @@ public class UserManager implements Iterable<User> {
         return instance;
     }
 
+    /**
+     * User profile storage.
+     */
     private Map<String, User> userProfile;
 
+    /**
+     * User Name storage (with copy of reserved names).
+     */
     private Set<String> names;
-    
-    // Store the reserved names.
+
+    /**
+     * Store the names that reserved by WebSocket users.
+     */
     private Set<String> reservedNames;
 
     private UserManager() {
@@ -72,26 +83,29 @@ public class UserManager implements Iterable<User> {
     }
 
     /**
-     * 清除全部注册用户信息。（不包含占位用户名信息）
+     * Clears the UDP server's user profile.
      */
     public void clearAllProfiles() {
         userProfile.clear();
         names.clear();
+        names.addAll(reservedNames);
     }
 
     /**
-     * 查询注册用户表中是否存在这个用户名。
-     * @param name 查询的用户名
-     * @return 用户名存在，返回真。
+     * Query the "names" storage and determine the user name exists or not.
+     *
+     * @param name The username to query.
+     * @return True if exists.
      */
     public boolean containsName(String name) {
         return names.contains(name);
     }
     
     /**
-     * 查询注册用户表中是否存在这个 UUID
-     * @param uuid 查询的 UUID
-     * @return UUID 存在，返回真。
+     * Query the "userProfile" storage and determine whether the UUID links to a user.
+     *
+     * @param uuid UUID to query.
+     * @return True if the UUID links to a user.
      */
     public boolean containsUuid(String uuid) {
         return userProfile.containsKey(uuid);
@@ -99,6 +113,7 @@ public class UserManager implements Iterable<User> {
 
     /**
      * 删除注册用户数据。
+     *
      * @param uuid 用户 UUID
      * @return 是否删除成功
      */

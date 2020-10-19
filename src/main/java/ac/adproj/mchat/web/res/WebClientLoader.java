@@ -43,7 +43,7 @@ public final class WebClientLoader {
     /**
      * Copy the web application package to temporary directory.
      *
-     * @return Destination of the web application package.
+     * @return Destination of the web application package, or null when I/O error occurs.
      */
     public static String getWebappWarPath() {
         FileOutputStream fos = null;

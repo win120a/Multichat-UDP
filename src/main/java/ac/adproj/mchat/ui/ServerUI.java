@@ -37,7 +37,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 
 /**
- * 服务器端界面。
+ * Server UI.
  * 
  * @author Andy Cheung
  */

@@ -28,10 +28,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 /**
- * 基本聊天用户界面。
+ * Base chatting UI (shell).
  * 
  * @author Andy Cheung
- * @implNote 本用户界面使用 SWT 实现
+ * @implNote Implemented by SWT.
  */
 public abstract class BaseChattingUI extends Shell {
     protected Text messageToSend;
@@ -56,7 +56,8 @@ public abstract class BaseChattingUI extends Shell {
     }
 
     /**
-     * Create the shell.
+     * Creates the shell object.
+     *
      * @param display The display object.
      */
     public BaseChattingUI(Display display) {
@@ -114,14 +115,14 @@ public abstract class BaseChattingUI extends Shell {
     }
     
     /**
-     * 按下“发送”按键的处理方法
+     * Event handler of clicking "Send message" button.
      * 
-     * @param text 要发送的消息
+     * @param text Message to send.
      */
     protected abstract void handleSendMessage(String text);
     
     /**
-     * 按下“注销”按键的处理方法
+     * Event handler of clicking "Logoff" button.
      */
     protected abstract void handleLogoff();
 
