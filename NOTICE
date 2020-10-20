@@ -27,7 +27,7 @@ The following dependencies are dual licensed under EPL and Apache License v. 2.
 The following dependencies are CDDL + GPLv2 with classpath exception.
 https://glassfish.dev.java.net/nonav/public/CDDL+GPL.html
 
-    * javax.servlet:javax.servlet-api
+    * javax.servlet::javax.servlet-api
 
 The following dependencies are licensed under EPL v. 2.
 
@@ -102,8 +102,6 @@ License Notices of Dependencies
 
 Location of Source code of dependencies
 -------------------------
-    SLF4J: https://github.com/qos-ch/slf4j
-
-    SWT: https://git.eclipse.org/gitroot/platform/eclipse.platform.swt.git
-
-    Jetty: https://github.com/eclipse/jetty.project
+    * SLF4J: https://github.com/qos-ch/slf4j
+    * SWT: https://git.eclipse.org/r/platform/eclipse.platform.swt.git
+    * Jetty: https://github.com/eclipse/jetty.project
