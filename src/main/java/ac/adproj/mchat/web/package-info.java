@@ -1,5 +1,5 @@
 /**
- * WebSocket 模块
+ * WebSocket Module.
  * 
  * @author Andy Cheung 
  */

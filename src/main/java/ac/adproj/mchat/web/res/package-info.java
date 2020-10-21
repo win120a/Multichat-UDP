@@ -1,5 +1,5 @@
 /**
- * WebSocket 模块的资源和加载类
+ * Resource loader class of WebSocket module.
  * 
  * @author Andy Cheung 
  */
