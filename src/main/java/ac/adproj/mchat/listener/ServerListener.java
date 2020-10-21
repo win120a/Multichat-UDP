@@ -180,9 +180,9 @@ public class ServerListener implements Listener {
     }
 
     /**
-     * 业务逻辑初始化方法。
+     * Method to initialize.
      *
-     * @throws IOException 如果读写出错
+     * @throws IOException If I/O error occurs.
      */
     private void init() throws IOException {
         ServerMessageHandler handler = new ServerMessageHandler(this);
@@ -199,7 +199,7 @@ public class ServerListener implements Listener {
         serverDatagramChannel = DatagramChannel.open();
         serverDatagramChannel.bind(new InetSocketAddress(ProtocolStrings.SERVER_PORT));
 
-        // 接受 UDP 连接的线程执行体
+        // Runnable to accept UDP connection.
         Runnable connectionReceivingRunnable = () -> receiveConnection(handler);
 
         threadPool.execute(connectionReceivingRunnable);
@@ -211,7 +211,7 @@ public class ServerListener implements Listener {
      * @param handler Server message handler.
      */
     private void receiveConnection(ServerMessageHandler handler) {
-        // 用于规避内部类变量 final 限制的List （可变类）
+        // In order to make the the socket address mutable.
         List<SocketAddress> ll = Collections.synchronizedList(new LinkedList<>());
 
         Thread currentThread = Thread.currentThread();
@@ -232,7 +232,7 @@ public class ServerListener implements Listener {
 
             } catch (Exception exc) {
                 if (exc.getClass() == ClosedByInterruptException.class) {
-                    // 程序退出了会发生这个异常，忽略。
+                    // Occurs when program is going to exit, ignore.
                     return;
                 }
 
@@ -354,19 +354,19 @@ public class ServerListener implements Listener {
     }
 
     /**
-     * 被动注销指定客户端（UUID）的回调方法。
+     * Callback when server got the logoff request from client.
      * 
-     * @param uuid 用户标识
-     * @throws IOException 如果IO出错
+     * @param uuid The UUID of the user.
+     * @throws IOException If I/O error occurs.
      */
     public void logoff(String uuid) throws IOException {
         userManager.deleteUserProfile(uuid);
     }
 
     /**
-     * 主动注销全部客户端。
+     * Let all clients connected to server logoff.
      * 
-     * @throws IOException 如果IO出错
+     * @throws IOException If I/O error occurs.
      */
     public void logoffAll() throws IOException {
         userManager.userProfileValueSet().forEach(v -> {

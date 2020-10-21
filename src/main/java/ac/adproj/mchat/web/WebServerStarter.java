@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * WebSocket 服务器和 WebSocket 客户端 （嵌入式 Jetty 服务器）的启动代码所在类。
+ * WebSocket Server (Embedded Jetty Server) bootstrapper.
  * 
  * @author Andy Cheung
  * @since 2020/5/24 (originally 2020/5/18)
@@ -40,8 +40,8 @@ public class WebServerStarter implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(WebServerStarter.class);
 
     /**
-     * WebSocket 服务的 (Servlet) 外观类，主要作用是包装 WebSocketHandler 类，供 Jetty 使用。
-     * 
+     * The Servlet class of WebSocket Service, which forward the request to the WebSocketHandler.
+     *
      * @author Andy Cheung
      */
     @SuppressWarnings("serial")
@@ -53,9 +53,9 @@ public class WebServerStarter implements AutoCloseable {
     }
     
     /**
-     * 启动嵌入式 Jetty 容器。
+     * Start embedded Jetty server.
      * 
-     * @param port HTTP 端口
+     * @param port HTTP port.
      */
     public void start(int port) {
         CommonThreadPool.execute(() -> {

@@ -1,5 +1,5 @@
 /**
- * 接口定义 / 数据封装类所在包。
+ * Interface definitions and data wrapper classes.
  * 
  * @author Andy Cheung
  */

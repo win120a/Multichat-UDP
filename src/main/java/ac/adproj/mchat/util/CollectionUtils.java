@@ -21,36 +21,44 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Providing some methods to generate immutable collections. (Intended for backward capability)
+ *
+ * @author Andy Cheung
+ */
 public final class CollectionUtils {
     private CollectionUtils() { }
 
     /**
-     * 返回一个空 Map。
-     * @param <K> 键类型
-     * @param <V> 值类型
-     * @return 内含 [k1, v1] 一个元素的只读的 Map
+     * Returns an empty map.
+     *
+     * @param <K> Type of key.
+     * @param <V> Type of value.
+     * @return An immutable empty map.
      */
     public static <K, V> Map<K, V> mapOf() {
         return Collections.emptyMap();
     }
 
     /**
-     * 返回一个空 Map。
-     * @param <K> 键类型
-     * @param <V> 值类型
-     * @return 内含 [k1, v1] 一个元素的只读的 Map
+     * Returns an empty map.
+     *
+     * @param <K> Type of key.
+     * @param <V> Type of value.
+     * @return An immutable empty map.
      */
     public static <K, V> Map<K, V> emptyMap() {
         return Collections.emptyMap();
     }
 
     /**
-     * 根据一对参数返回只读 Map。（类似于 Java 9 中 Map.of 方法的作用）
-     * @param <K> 键类型
-     * @param <V> 值类型
-     * @param k1 第一个键 
-     * @param v1 第一个值
-     * @return 内含 [k1, v1] 一个元素的只读的 Map
+     * Returns a read-only Map according to parameters (like Map.of in Java 9).
+     *
+     * @param <K> Type of key.
+     * @param <V> Type of value.
+     * @param k1 The first key.
+     * @param v1 The first value.
+     * @return An read-only map that contains only one element [(K1, V1)].
      */
     public static <K, V> Map<K, V> mapOf(K k1, V v1) {
         HashMap<K, V> hm = new HashMap<>(1);
@@ -61,14 +69,15 @@ public final class CollectionUtils {
     }
 
     /**
-     * 根据两对参数返回只读 Map。（类似于 Java 9 中 Map.of 方法的作用）
-     * @param <K> 键类型
-     * @param <V> 值类型
-     * @param k1 第一个键 
-     * @param v1 第一个值
-     * @param k2 第二个键 
-     * @param v2 第二个值
-     * @return 内含 [k1, v1], [k2, v2] 两个元素的只读的 Map
+     * Returns a read-only Map according to parameters (like Map.of in Java 9).
+     *
+     * @param <K> Type of key.
+     * @param <V> Type of value.
+     * @param k1 The first key.
+     * @param v1 The first value.
+     * @param k2 The second key.
+     * @param v2 The second value.
+     * @return An read-only map that contains two elements [(K1, V1), (K2, V2)].
      */
     public static <K, V> Map<K, V> mapOf(K k1, V v1, K k2, V v2) {
         HashMap<K, V> hm = new HashMap<>(2);

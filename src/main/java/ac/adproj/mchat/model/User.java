@@ -21,24 +21,24 @@ import java.net.SocketAddress;
 import java.util.Objects;
 
 /**
- * 用户属性封装类。
+ * Wrapper of User properties.
  * 
  * @author Andy Cheung
  * @since 2020-4-27
  */
 public final class User {
     /**
-     * 用户标识
+     * UUID of the user.
      */
     private String uuid;
     
     /**
-     * 用户地址
+     * Socket address.
      */
     private SocketAddress address;
     
     /**
-     * 用户名
+     * Username.
      */
     private String name;
 
