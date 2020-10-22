@@ -77,9 +77,9 @@ public class ClientUI extends BaseChattingUI {
     }
     
     /**
-     * 向用户获取用户名。
+     * Ask user nickname.
      * 
-     * @return 用户名
+     * @return The nickname that user entered.
      */
     private static String getUserName() {
         return inputDialog("请输入用户名", "必须输入用户名！");

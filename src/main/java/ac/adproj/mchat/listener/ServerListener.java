@@ -180,7 +180,7 @@ public class ServerListener implements Listener {
     }
 
     /**
-     * Method to initialize.
+     * Method to initialize the server listener.
      *
      * @throws IOException If I/O error occurs.
      */

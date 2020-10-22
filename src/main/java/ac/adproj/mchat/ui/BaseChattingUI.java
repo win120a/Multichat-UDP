@@ -42,9 +42,9 @@ public abstract class BaseChattingUI extends Shell {
     private boolean hasReceivedMessage;
     
     /**
-     * 追加消息到消息显示框。
+     * Appends message to the message display.
      * 
-     * @param message 消息
+     * @param message The message.
      */
     public void appendMessageDisplay(String message) {
         if (hasReceivedMessage) {
@@ -71,7 +71,7 @@ public abstract class BaseChattingUI extends Shell {
     }
 
     /**
-     * Create contents of the shell.
+     * Creates contents of the shell.
      */
     protected void createContents() {
         

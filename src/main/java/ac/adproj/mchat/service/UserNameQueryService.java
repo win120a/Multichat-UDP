@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 用户名检查服务的线程执行体。
+ * Runnable of user name query service.
  * 
  * @author Andy Cheung
  */
