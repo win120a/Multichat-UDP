@@ -6,7 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="mchat_udp" />
+        <module name="mchat_ui" />
+        <module name="udp_socket_mod" />
+        <module name="aes_encryption_impl" />
+        <module name="common_part" />
+        <module name="websocket_mod" />
+        <module name="crypto_api" />
       </profile>
     </annotationProcessing>
   </component>
