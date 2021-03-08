@@ -26,11 +26,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import ac.adproj.mchat.handler.MessageType;
 import ac.adproj.mchat.handler.MessageTypeConstants;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 
-import ac.adproj.mchat.handler.MessageType;
 import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.service.MessageDistributor;
@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import static ac.adproj.mchat.handler.MessageType.*;
 
 /**
- * WebSocket 消息处理器。
+ * WebSocket message (connection) handler.
  * 
  * @author Andy Cheung
  * @since 2020/5/18

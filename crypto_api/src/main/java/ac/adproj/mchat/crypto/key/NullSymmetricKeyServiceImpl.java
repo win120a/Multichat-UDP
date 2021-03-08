@@ -17,11 +17,7 @@
 
 package ac.adproj.mchat.crypto.key;
 
-import ac.adproj.mchat.crypto.SymmetricCryptoService;
-
-import javax.crypto.BadPaddingException;
 import java.io.IOException;
-import java.security.InvalidKeyException;
 import java.security.Key;
 
 /**

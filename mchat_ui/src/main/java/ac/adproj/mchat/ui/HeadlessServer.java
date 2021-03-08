@@ -17,6 +17,8 @@
 
 package ac.adproj.mchat.ui;
 
+import ac.adproj.mchat.crypto.key.AESKeyServiceImpl;
+import ac.adproj.mchat.crypto.key.SymmetricKeyService;
 import ac.adproj.mchat.listener.ServerListener;
 import ac.adproj.mchat.model.ProtocolStrings;
 import ac.adproj.mchat.service.MessageDistributor;
@@ -35,10 +37,14 @@ public class HeadlessServer {
         System.out.println(String.format(
                             "Accepting UDP Connection on port %d, WebSocket connection on %d."
                                 , ProtocolStrings.SERVER_PORT, 8090));
-        System.out.println("Press <Ctrl> + <C / D> to stop.");
+        System.out.println("Key File: " + (args.length == 0 ? "<No key file>" : args[0]));
         System.out.println();
         
         try (ServerListener listener = ServerListener.getInstance(); WebServerStarter starter = new WebServerStarter()) {
+            if (args.length != 0) {
+                listener.setKey(SymmetricKeyService.getInstance().readKeyFromFile(args[0]));
+            }
+
             MessageDistributor.getInstance().registerSubscriber(System.out::println);
             
             starter.start(8090);

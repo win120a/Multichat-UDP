@@ -60,13 +60,13 @@ public abstract class BaseChattingUI extends Shell {
      *
      * @param display The display object.
      */
-    public BaseChattingUI(Display display) {
+    protected BaseChattingUI(Display display) {
         super(display, SWT.SHELL_TRIM);
         setLayout(new GridLayout(4, false));
         createContents();
     }
-    
-    public BaseChattingUI() {
+
+    protected BaseChattingUI() {
         this(new Display());
     }
 

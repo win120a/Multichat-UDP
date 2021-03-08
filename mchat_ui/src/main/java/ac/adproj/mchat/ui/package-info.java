@@ -1,5 +1,5 @@
 /**
- * UI 界面类。
+ * User Interface classes.
  * 
  * @author Andy Cheung 
  */
